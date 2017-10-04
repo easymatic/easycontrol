@@ -9,17 +9,27 @@ import (
 	"github.com/goburrow/modbus"
 )
 
+const READER_START_ADDRESS = 16
+const READER_BLOCK_SIZE = 2
+const READER_COUNT = 2
+
 type Tag struct {
 	Name  string
 	Value string
 }
 
-type ArduinoHandler struct {
-	handler.Handler
-	ClientHandler *modbus.RTUClientHandler
+type Reader struct {
+	EventId  int
+	CardCode int
 }
 
-func NewArduinoHandler() *ArduinoHandler {
+type ReaderHandler struct {
+	handler.Handler
+	ClientHandler *modbus.RTUClientHandler
+	Readers       [READER_COUNT]Reader
+}
+
+func NewReaderHandler() *ReaderHandler {
 	handler := modbus.NewRTUClientHandler("/dev/ttyMDB")
 	handler.BaudRate = 9600
 	handler.DataBits = 8
@@ -27,10 +37,15 @@ func NewArduinoHandler() *ArduinoHandler {
 	handler.StopBits = 1
 	handler.SlaveId = 1
 	handler.Timeout = 5 * time.Second
-	return &ArduinoHandler{ClientHandler: handler}
+
+	readers := [READER_COUNT]Reader{
+		Reader{EventId: -1},
+		Reader{EventId: -1}}
+
+	return &ReaderHandler{ClientHandler: handler, Readers: readers}
 }
 
-func (ah *ArduinoHandler) Start() {
+func (ah *ReaderHandler) Start() {
 	err := ah.ClientHandler.Connect()
 	if err != nil {
 		log.Fatal(err)
@@ -40,13 +55,50 @@ func (ah *ArduinoHandler) Start() {
 
 	client := modbus.NewClient(ah.ClientHandler)
 	for {
-		results, _ := client.ReadInputRegisters(0, 28)
-		fmt.Printf("Read: %v \n", results)
-	}
+		results, _ := client.ReadInputRegisters(
+			READER_START_ADDRESS,
+			READER_COUNT*READER_BLOCK_SIZE)
 
-	//	}
+		ah.processReaderData(results)
+	}
 }
 
-func (ah *ArduinoHandler) Stop() {
+func (ah *ReaderHandler) processReaderData(data []byte) {
+	if len(data) == 0 {
+		return
+	}
+	for idx, reader := range ah.Readers {
+		eventIdPos := 2 * READER_BLOCK_SIZE * idx
+		newEventId := int(data[eventIdPos])
+		curEventId := reader.EventId
+		if curEventId >= 0 && newEventId > 0 {
+			if newEventId != curEventId {
+				d1 := int(data[eventIdPos+1]) << 16
+				d2 := int(data[eventIdPos+2]) << 8
+				d3 := int(data[eventIdPos+3])
+				ah.Readers[idx].CardCode = d1 | d2 | d3
+
+				fmt.Printf(
+					"ah.reader[%v]: EventId=%v, CardCode=%v \n",
+					idx,
+					ah.Readers[idx].EventId,
+					ah.Readers[idx].CardCode)
+
+				// TODO fire ReadCardCode event
+			}
+		}
+		ah.Readers[idx].EventId = newEventId
+	}
+}
+
+func (ah *ReaderHandler) Stop() {
+
+}
+
+func (ah *ReaderHandler) GetTags(key string) string {
+	return ""
+}
+
+func (ah *ReaderHandler) SetTag(key string, value string) {
 
 }
