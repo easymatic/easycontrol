@@ -9,11 +9,6 @@ import (
 	"github.com/goburrow/modbus"
 )
 
-type Tag struct {
-	Name  string
-	Value string
-}
-
 type ArduinoHandler struct {
 	handler.Handler
 	ClientHandler *modbus.RTUClientHandler
