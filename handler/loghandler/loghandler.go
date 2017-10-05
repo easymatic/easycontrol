@@ -11,18 +11,18 @@ type LogHandler struct {
 	handler.BaseHandler
 }
 
-func (dh *LogHandler) Start(eventchan chan string) {
-	dh.EventChan = eventchan
+func (lh *LogHandler) Start(eventchan chan string) error {
+	lh.EventChan = eventchan
 	ctx := context.Background()
-	dh.BaseHandler.Ctx, dh.BaseHandler.Cancel = context.WithCancel(ctx)
+	lh.BaseHandler.Ctx, lh.BaseHandler.Cancel = context.WithCancel(ctx)
 	fmt.Println("starting log handler")
 	for {
 		select {
-		case event := <-dh.EventChan:
+		case event := <-lh.EventChan:
 			fmt.Printf("loghander have event: %s\n", event)
-		case <-dh.BaseHandler.Ctx.Done():
+		case <-lh.BaseHandler.Ctx.Done():
 			fmt.Println("Context canceled")
-			return
+			return lh.BaseHandler.Ctx.Err()
 		}
 	}
 }

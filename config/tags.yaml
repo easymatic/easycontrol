@@ -1,0 +1,18 @@
+input:
+  - name: Y0
+    address: 1281
+  - name: Y1
+    address: 1282
+  - name: Y2
+    address: 1283
+  - name: Y3
+    address: 1284
+  - name: Y5
+    address: 1285
+output:
+  - name: RED
+    address: 2092
+  - name: RED2
+    address: 2078
+  - name: GREEN
+    address: 2079

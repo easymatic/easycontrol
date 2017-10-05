@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"sync"
-	"time"
 
 	"github.com/easymatic/easycontrol/handler/dummyhandler"
 	"github.com/easymatic/easycontrol/handler/loghandler"
+	"github.com/easymatic/easycontrol/handler/plchandler"
 )
 
 func Start() error {
@@ -13,19 +14,28 @@ func Start() error {
 	eventchan := make(chan string, 100)
 	dummy := &dummyhandler.DummyHandler{}
 	log := &loghandler.LogHandler{}
-	time.AfterFunc(time.Second*5, dummy.Stop)
-	time.AfterFunc(time.Second*5, log.Stop)
+	plc := &plchandler.PLCHandler{}
 
 	var wg sync.WaitGroup
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Start(eventchan)
+		if err := log.Start(eventchan); err != nil {
+			fmt.Printf("Error while running log handler: %v\n", err)
+		}
 	}()
 	go func() {
 		defer wg.Done()
-		dummy.Start(eventchan)
+		if err := dummy.Start(eventchan); err != nil {
+			fmt.Printf("Error while running dummy handler: %v\n", err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		if err := plc.Start(eventchan); err != nil {
+			fmt.Printf("Error while running plc handler: %v\n", err)
+		}
 	}()
 	wg.Wait()
 	return nil
