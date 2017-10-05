@@ -30,7 +30,6 @@ func Start() error {
 	}()
 	go func() {
 		defer wg.Done()
-		rh.Start(eventchan)
 		if err := rh.Start(eventchan); err != nil {
 			fmt.Printf("Error while running reader handler: %v\n", err)
 		}
