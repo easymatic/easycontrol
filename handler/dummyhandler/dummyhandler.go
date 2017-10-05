@@ -13,7 +13,7 @@ type DummyHandler struct {
 	handler.BaseHandler
 }
 
-func (dh *DummyHandler) Start(eventchan chan handler.Event) {
+func (dh *DummyHandler) Start(eventchan chan handler.Event) error {
 	dh.EventChan = eventchan
 	ctx := context.Background()
 	dh.BaseHandler.Ctx, dh.BaseHandler.Cancel = context.WithCancel(ctx)
@@ -25,7 +25,7 @@ func (dh *DummyHandler) Start(eventchan chan handler.Event) {
 			dh.EventChan <- handler.Event{Handler: "dummyhandler", SourceId: "SourceId", Data: "some event from dummy"}
 		case <-dh.BaseHandler.Ctx.Done():
 			fmt.Println("Context canceled")
-			return
+			return dh.BaseHandler.Ctx.Err()
 		}
 	}
 }

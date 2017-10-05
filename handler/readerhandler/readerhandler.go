@@ -24,10 +24,11 @@ type Reader struct {
 type ReaderHandler struct {
 	handler.BaseHandler
 
-	ClientHandler *modbus.RTUClientHandler
-	Readers       [READER_COUNT]Reader
+	//ClientHandler *modbus.RTUClientHandler
+	Readers [READER_COUNT]Reader
 }
 
+/*
 func NewReaderHandler() *ReaderHandler {
 	handler := modbus.NewRTUClientHandler("/dev/ttyMDB")
 	handler.BaudRate = 9600
@@ -43,6 +44,7 @@ func NewReaderHandler() *ReaderHandler {
 
 	return &ReaderHandler{ClientHandler: handler, Readers: readers}
 }
+*/
 
 func (ah *ReaderHandler) Start(eventchan chan handler.Event) error {
 	fmt.Println("starting reader handler")
@@ -52,14 +54,26 @@ func (ah *ReaderHandler) Start(eventchan chan handler.Event) error {
 	ctx := context.Background()
 	ah.BaseHandler.Ctx, ah.BaseHandler.Cancel = context.WithCancel(ctx)
 
-	err := ah.ClientHandler.Connect()
+	h := modbus.NewRTUClientHandler("/dev/ttyMDB")
+	h.BaudRate = 9600
+	h.DataBits = 8
+	h.Parity = "N"
+	h.StopBits = 1
+	h.SlaveId = 1
+	h.Timeout = 5 * time.Second
+
+	ah.Readers = [READER_COUNT]Reader{
+		Reader{EventId: -1},
+		Reader{EventId: -1}}
+
+	err := h.Connect()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer ah.ClientHandler.Close()
+	defer h.Close()
 
-	client := modbus.NewClient(ah.ClientHandler)
+	client := modbus.NewClient(h)
 	for {
 		select {
 		case <-ah.BaseHandler.Ctx.Done():
