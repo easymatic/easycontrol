@@ -1,5 +1,10 @@
 package handler
 
+import (
+	"context"
+	"fmt"
+)
+
 type Handler interface {
 	Start() error
 	Stop()
@@ -8,11 +13,15 @@ type Handler interface {
 }
 
 type BaseHandler struct {
+	EventChan chan string
 	Handler
+	Ctx    context.Context
+	Cancel context.CancelFunc
 }
 
 func (bh *BaseHandler) Stop() {
-
+	bh.Cancel()
+	fmt.Println("stopping dummy handler")
 }
 
 type Tag struct {

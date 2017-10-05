@@ -1,27 +1,25 @@
-package dummyhandler
+package loghandler
 
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/easymatic/easycontrol/handler"
 )
 
-type DummyHandler struct {
+type LogHandler struct {
 	handler.BaseHandler
 }
 
-func (dh *DummyHandler) Start(eventchan chan string) {
+func (dh *LogHandler) Start(eventchan chan string) {
 	dh.EventChan = eventchan
 	ctx := context.Background()
 	dh.BaseHandler.Ctx, dh.BaseHandler.Cancel = context.WithCancel(ctx)
-	fmt.Println("starting dummy handler")
+	fmt.Println("starting log handler")
 	for {
 		select {
-		case <-time.After(1 * time.Second):
-			fmt.Println("Dummyhandler working")
-			dh.EventChan <- "some event from dummy"
+		case event := <-dh.EventChan:
+			fmt.Printf("loghander have event: %s\n", event)
 		case <-dh.BaseHandler.Ctx.Done():
 			fmt.Println("Context canceled")
 			return
