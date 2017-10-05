@@ -3,13 +3,14 @@ package main
 import (
 	"sync"
 
+	"github.com/easymatic/easycontrol/handler"
 	"github.com/easymatic/easycontrol/handler/loghandler"
 	"github.com/easymatic/easycontrol/handler/readerhandler"
 )
 
 func Start() error {
 	// readerhandler.NewArduinoHandler().Start()
-	eventchan := make(chan string, 100)
+	eventchan := make(chan handler.Event, 100)
 	//dummy := &dummyhandler.DummyHandler{}
 	log := &loghandler.LogHandler{}
 	rh := readerhandler.NewReaderHandler()

@@ -3,6 +3,7 @@ package readerhandler
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"golang.org/x/net/context"
@@ -43,8 +44,10 @@ func NewReaderHandler() *ReaderHandler {
 	return &ReaderHandler{ClientHandler: handler, Readers: readers}
 }
 
-func (ah *ReaderHandler) Start(eventchan chan string) {
+func (ah *ReaderHandler) Start(eventchan chan handler.Event) error {
 	fmt.Println("starting reader handler")
+
+	ah.EventChan = eventchan
 
 	ctx := context.Background()
 	ah.BaseHandler.Ctx, ah.BaseHandler.Cancel = context.WithCancel(ctx)
@@ -61,7 +64,7 @@ func (ah *ReaderHandler) Start(eventchan chan string) {
 		select {
 		case <-ah.BaseHandler.Ctx.Done():
 			fmt.Println("Context canceled")
-			return
+			return ah.BaseHandler.Ctx.Err()
 
 		default:
 			ah.process(client)
@@ -93,14 +96,12 @@ func (ah *ReaderHandler) processReaderData(data []byte) {
 				d2 := int(data[eventIdPos+2]) << 8
 				d3 := int(data[eventIdPos+3])
 				ah.Readers[idx].CardCode = d1 | d2 | d3
+				t := handler.Event{
+					Handler:  "readerhandler",
+					SourceId: fmt.Sprintf("%s%d", "Reader", idx),
+					Data:     strconv.Itoa(ah.Readers[idx].CardCode)}
 
-				fmt.Printf(
-					"ah.reader[%v]: EventId=%v, CardCode=%v \n",
-					idx,
-					ah.Readers[idx].EventId,
-					ah.Readers[idx].CardCode)
-
-				// TODO fire ReadCardCode event
+				ah.EventChan <- t
 			}
 		}
 		ah.Readers[idx].EventId = newEventId
