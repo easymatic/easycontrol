@@ -21,10 +21,7 @@ type Reader struct {
 }
 
 type ReaderHandler struct {
-	handler.Handler
-
-	ctx    context.Context
-	cancel context.CancelFunc
+	handler.BaseHandler
 
 	ClientHandler *modbus.RTUClientHandler
 	Readers       [READER_COUNT]Reader
@@ -46,11 +43,11 @@ func NewReaderHandler() *ReaderHandler {
 	return &ReaderHandler{ClientHandler: handler, Readers: readers}
 }
 
-func (ah *ReaderHandler) Start() {
+func (ah *ReaderHandler) Start(eventchan chan string) {
 	fmt.Println("starting reader handler")
 
 	ctx := context.Background()
-	ah.ctx, ah.cancel = context.WithCancel(ctx)
+	ah.BaseHandler.Ctx, ah.BaseHandler.Cancel = context.WithCancel(ctx)
 
 	err := ah.ClientHandler.Connect()
 	if err != nil {
@@ -62,10 +59,7 @@ func (ah *ReaderHandler) Start() {
 	client := modbus.NewClient(ah.ClientHandler)
 	for {
 		select {
-		//case <-time.After(1 * time.Second):
-		//	ah.process(client)
-
-		case <-ah.ctx.Done():
+		case <-ah.BaseHandler.Ctx.Done():
 			fmt.Println("Context canceled")
 			return
 
@@ -111,11 +105,6 @@ func (ah *ReaderHandler) processReaderData(data []byte) {
 		}
 		ah.Readers[idx].EventId = newEventId
 	}
-}
-
-func (ah *ReaderHandler) Stop() {
-	ah.cancel()
-	fmt.Println("stopping reader handler")
 }
 
 func (ah *ReaderHandler) GetTags(key string) string {
