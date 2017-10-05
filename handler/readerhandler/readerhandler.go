@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/easymatic/easycontrol/handler"
 	"github.com/goburrow/modbus"
 )
@@ -13,11 +15,6 @@ const READER_START_ADDRESS = 16
 const READER_BLOCK_SIZE = 2
 const READER_COUNT = 2
 
-type Tag struct {
-	Name  string
-	Value string
-}
-
 type Reader struct {
 	EventId  int
 	CardCode int
@@ -25,6 +22,10 @@ type Reader struct {
 
 type ReaderHandler struct {
 	handler.Handler
+
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	ClientHandler *modbus.RTUClientHandler
 	Readers       [READER_COUNT]Reader
 }
@@ -46,6 +47,11 @@ func NewReaderHandler() *ReaderHandler {
 }
 
 func (ah *ReaderHandler) Start() {
+	fmt.Println("starting reader handler")
+
+	ctx := context.Background()
+	ah.ctx, ah.cancel = context.WithCancel(ctx)
+
 	err := ah.ClientHandler.Connect()
 	if err != nil {
 		log.Fatal(err)
@@ -55,12 +61,28 @@ func (ah *ReaderHandler) Start() {
 
 	client := modbus.NewClient(ah.ClientHandler)
 	for {
-		results, _ := client.ReadInputRegisters(
-			READER_START_ADDRESS,
-			READER_COUNT*READER_BLOCK_SIZE)
+		select {
+		//case <-time.After(1 * time.Second):
+		//	ah.process(client)
 
-		ah.processReaderData(results)
+		case <-ah.ctx.Done():
+			fmt.Println("Context canceled")
+			return
+
+		default:
+			ah.process(client)
+		}
 	}
+}
+
+func (ah *ReaderHandler) process(client modbus.Client) {
+
+	results, _ := client.ReadInputRegisters(
+		READER_START_ADDRESS,
+		READER_COUNT*READER_BLOCK_SIZE)
+
+	ah.processReaderData(results)
+
 }
 
 func (ah *ReaderHandler) processReaderData(data []byte) {
@@ -92,7 +114,8 @@ func (ah *ReaderHandler) processReaderData(data []byte) {
 }
 
 func (ah *ReaderHandler) Stop() {
-
+	ah.cancel()
+	fmt.Println("stopping reader handler")
 }
 
 func (ah *ReaderHandler) GetTags(key string) string {
