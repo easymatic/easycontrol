@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/easymatic/easycontrol/handler/dummyhandler"
+	"github.com/easymatic/easycontrol/handler"
 	"github.com/easymatic/easycontrol/handler/loghandler"
 	"github.com/easymatic/easycontrol/handler/plchandler"
+	"github.com/easymatic/easycontrol/handler/readerhandler"
 )
 
 func Start() error {
-	// readerhandler.NewArduinoHandler().Start()
-	eventchan := make(chan string, 100)
-	dummy := &dummyhandler.DummyHandler{}
+	eventchan := make(chan handler.Event, 100)
+	//dummy := &dummyhandler.DummyHandler{}
 	log := &loghandler.LogHandler{}
+	rh := &readerhandler.ReaderHandler{}
+	//time.AfterFunc(time.Second*5, dummy.Stop)
+	//time.AfterFunc(time.Second*5, log.Stop)
 	plc := &plchandler.PLCHandler{}
 
 	var wg sync.WaitGroup
@@ -27,8 +30,8 @@ func Start() error {
 	}()
 	go func() {
 		defer wg.Done()
-		if err := dummy.Start(eventchan); err != nil {
-			fmt.Printf("Error while running dummy handler: %v\n", err)
+		if err := rh.Start(eventchan); err != nil {
+			fmt.Printf("Error while running reader handler: %v\n", err)
 		}
 	}()
 	go func() {
@@ -37,6 +40,13 @@ func Start() error {
 			fmt.Printf("Error while running plc handler: %v\n", err)
 		}
 	}()
+
+	/*
+		go func() {
+			defer wg.Done()
+			dummy.Start(eventchan)
+		}()
+	*/
 	wg.Wait()
 	return nil
 }

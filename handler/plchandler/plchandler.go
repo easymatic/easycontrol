@@ -1,10 +1,11 @@
 package plchandler
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"time"
+
+	"golang.org/x/net/context"
 
 	"github.com/easymatic/easycontrol/handler"
 	"github.com/goburrow/modbus"
@@ -42,28 +43,28 @@ func getTagsConfig() Tags {
 	return tags
 }
 
-func (ph *PLCHandler) Start(eventchan chan string) error {
+func (ph *PLCHandler) Start(eventchan chan handler.Event) error {
 	ph.EventChan = eventchan
 	ctx := context.Background()
 	ph.BaseHandler.Ctx, ph.BaseHandler.Cancel = context.WithCancel(ctx)
 	fmt.Println("starting plc handler")
 	tags := getTagsConfig()
 	fmt.Printf("%+v", tags)
-	handler := modbus.NewASCIIClientHandler("/dev/ttyPLC")
-	handler.BaudRate = 9600
-	handler.DataBits = 7
-	handler.Parity = "E"
-	handler.StopBits = 2
-	handler.SlaveId = 1
-	handler.Timeout = 2 * time.Second
+	h := modbus.NewASCIIClientHandler("/dev/ttyPLC")
+	h.BaudRate = 9600
+	h.DataBits = 7
+	h.Parity = "E"
+	h.StopBits = 2
+	h.SlaveId = 1
+	h.Timeout = 2 * time.Second
 
-	err := handler.Connect()
+	err := h.Connect()
 	if err != nil {
 		return err
 	}
-	defer handler.Close()
+	defer h.Close()
 
-	client := modbus.NewClient(handler)
+	client := modbus.NewClient(h)
 	for {
 		select {
 		case <-ph.BaseHandler.Ctx.Done():
@@ -74,8 +75,10 @@ func (ph *PLCHandler) Start(eventchan chan string) error {
 			if err != nil {
 				fmt.Printf("ERROR: %v\n", err)
 			}
-			b := results[0] & 1
-			fmt.Printf("readed coil: %v", b)
+			if len(results) > 0 {
+				b := results[0] & 1
+				fmt.Printf("readed coil: %v\n", b)
+			}
 			// var val uint16 = ON
 			// if b != 0 {
 			// val = OFF

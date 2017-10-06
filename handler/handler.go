@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"context"
 	"fmt"
+
+	"golang.org/x/net/context"
 )
 
 type Handler interface {
@@ -12,8 +13,14 @@ type Handler interface {
 	SetTag(key string, value string)
 }
 
+type Event struct {
+	Handler  string
+	SourceId string
+	Data     string
+}
+
 type BaseHandler struct {
-	EventChan chan string
+	EventChan chan Event
 	Handler
 	Ctx    context.Context
 	Cancel context.CancelFunc
