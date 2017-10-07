@@ -1,9 +1,8 @@
 package handler
 
 import (
+	"context"
 	"fmt"
-
-	"golang.org/x/net/context"
 )
 
 type Handler interface {
@@ -20,7 +19,8 @@ type Event struct {
 }
 
 type BaseHandler struct {
-	EventChan chan Event
+	EventChan   chan Event
+	CommandChan chan Event
 	Handler
 	Ctx    context.Context
 	Cancel context.CancelFunc
@@ -29,6 +29,16 @@ type BaseHandler struct {
 func (bh *BaseHandler) Stop() {
 	bh.Cancel()
 	fmt.Println("stopping dummy handler")
+}
+
+func (bh *BaseHandler) SetTag(tag Event) {
+	fmt.Printf("setting tag %v\n", tag)
+	bh.CommandChan <- tag
+}
+
+func (bh *BaseHandler) SendEvent(tag Event) {
+	fmt.Printf("sending event %v\n", tag)
+	bh.EventChan <- tag
 }
 
 type Tag struct {

@@ -1,12 +1,11 @@
 package readerhandler
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
-
-	"golang.org/x/net/context"
 
 	"github.com/easymatic/easycontrol/handler"
 	"github.com/goburrow/modbus"
@@ -46,13 +45,14 @@ func NewReaderHandler() *ReaderHandler {
 }
 */
 
-func (ah *ReaderHandler) Start(eventchan chan handler.Event) error {
+func (ah *ReaderHandler) Start(eventchan chan handler.Event, commandchan chan handler.Event) error {
+	ah.CommandChan = commandchan
 	fmt.Println("starting reader handler")
 
 	ah.EventChan = eventchan
 
 	ctx := context.Background()
-	ah.BaseHandler.Ctx, ah.BaseHandler.Cancel = context.WithCancel(ctx)
+	ah.Ctx, ah.Cancel = context.WithCancel(ctx)
 
 	h := modbus.NewRTUClientHandler("/dev/ttyMDB")
 	h.BaudRate = 9600
@@ -76,9 +76,9 @@ func (ah *ReaderHandler) Start(eventchan chan handler.Event) error {
 	client := modbus.NewClient(h)
 	for {
 		select {
-		case <-ah.BaseHandler.Ctx.Done():
+		case <-ah.Ctx.Done():
 			fmt.Println("Context canceled")
-			return ah.BaseHandler.Ctx.Err()
+			return ah.Ctx.Err()
 
 		default:
 			ah.process(client)

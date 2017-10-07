@@ -1,11 +1,11 @@
 package plchandler
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"time"
-
-	"golang.org/x/net/context"
 
 	"github.com/easymatic/easycontrol/handler"
 	"github.com/goburrow/modbus"
@@ -14,6 +14,7 @@ import (
 
 type PLCHandler struct {
 	handler.BaseHandler
+	Tags map[int]*handler.Tag
 }
 
 const ON = 65280 // 0xFF00
@@ -22,11 +23,11 @@ const OFF = 0    // 0x0000
 type Tags struct {
 	Input []struct {
 		Name    string `yaml:"name"`
-		address int    `yaml:"address"`
+		Address int    `yaml:"address"`
 	} `yaml:"input"`
 	Output []struct {
 		Name    string `yaml:"name"`
-		address int    `yaml:"address"`
+		Address int    `yaml:"address"`
 	} `yaml:"output"`
 }
 
@@ -43,13 +44,15 @@ func getTagsConfig() Tags {
 	return tags
 }
 
-func (ph *PLCHandler) Start(eventchan chan handler.Event) error {
+func (ph *PLCHandler) Start(eventchan chan handler.Event, commandchan chan handler.Event) error {
+	ph.Tags = make(map[int]*handler.Tag)
+	ph.CommandChan = commandchan
 	ph.EventChan = eventchan
 	ctx := context.Background()
-	ph.BaseHandler.Ctx, ph.BaseHandler.Cancel = context.WithCancel(ctx)
+	ph.Ctx, ph.Cancel = context.WithCancel(ctx)
 	fmt.Println("starting plc handler")
 	tags := getTagsConfig()
-	fmt.Printf("%+v", tags)
+	fmt.Printf("%+v\n", tags)
 	h := modbus.NewASCIIClientHandler("/dev/ttyPLC")
 	h.BaudRate = 9600
 	h.DataBits = 7
@@ -63,22 +66,40 @@ func (ph *PLCHandler) Start(eventchan chan handler.Event) error {
 		return err
 	}
 	defer h.Close()
-
+	//
 	client := modbus.NewClient(h)
 	for {
 		select {
-		case <-ph.BaseHandler.Ctx.Done():
+		case <-ph.Ctx.Done():
 			fmt.Println("Context canceled")
-			return ph.BaseHandler.Ctx.Err()
+			return ph.Ctx.Err()
+		case command := <-ph.CommandChan:
+			fmt.Printf("have command: %v\n", command)
 		default:
-			results, err := client.ReadCoils(1283, 1)
-			if err != nil {
-				fmt.Printf("ERROR: %v\n", err)
+			for _, tag := range tags.Input {
+				results, err := client.ReadCoils(uint16(tag.Address), 1)
+				if err != nil {
+					fmt.Printf("ERROR: %v\n", err)
+				}
+				if len(results) > 0 {
+					b := results[0] & 1
+					// fmt.Printf("read %s: %v\n", tag.Name, b)
+					t, already := ph.Tags[tag.Address]
+					if !already {
+						fmt.Println("create new one")
+						t = &handler.Tag{Name: tag.Name}
+						ph.Tags[tag.Address] = t
+					}
+					val := strconv.Itoa(int(b))
+					// fmt.Printf("%s and %s\n", t.Value, val)
+					if t.Value != val {
+						t.Value = val
+						ph.SendEvent(handler.Event{SourceId: t.Name, Handler: "plchandler", Data: t.Value})
+					}
+				}
+
 			}
-			if len(results) > 0 {
-				b := results[0] & 1
-				fmt.Printf("readed coil: %v\n", b)
-			}
+			// time.Sleep(time.Second)
 			// var val uint16 = ON
 			// if b != 0 {
 			// val = OFF
