@@ -14,7 +14,7 @@ actions:
             value: 0
   - name: turnOnY3
     event:
-      handler: plchandler
+      source: plchandler
       tag:
         name: GREEN
         value: 1
@@ -38,4 +38,11 @@ actions:
           tag:
             name: Y3
             value: 1
- ~
+      - name: delay
+        params: 5
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: Y3
+            value: 0
