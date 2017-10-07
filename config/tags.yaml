@@ -1,4 +1,4 @@
-input:
+output:
   - name: Y0
     address: 1281
   - name: Y1
@@ -9,7 +9,7 @@ input:
     address: 1284
   - name: Y5
     address: 1285
-output:
+input:
   - name: RED
     address: 2092
   - name: RED2

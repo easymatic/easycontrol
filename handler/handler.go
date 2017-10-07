@@ -13,14 +13,19 @@ type Handler interface {
 }
 
 type Event struct {
-	Handler  string
-	SourceId string
-	Data     string
+	Source string
+	Tag    Tag
+}
+
+type Command struct {
+	Destination string
+	Tag         Tag
 }
 
 type BaseHandler struct {
-	EventChan   chan Event
-	CommandChan chan Event
+	EventChan      chan Event
+	CommandChanIn  chan Tag
+	CommandChanOut chan Command
 	Handler
 	Ctx    context.Context
 	Cancel context.CancelFunc
@@ -31,9 +36,9 @@ func (bh *BaseHandler) Stop() {
 	fmt.Println("stopping dummy handler")
 }
 
-func (bh *BaseHandler) SetTag(tag Event) {
-	fmt.Printf("setting tag %v\n", tag)
-	bh.CommandChan <- tag
+func (bh *BaseHandler) SetTag(command Command) {
+	fmt.Printf("setting tag %v\n", command)
+	bh.CommandChanOut <- command
 }
 
 func (bh *BaseHandler) SendEvent(tag Event) {

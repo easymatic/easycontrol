@@ -5,14 +5,15 @@ import (
 	"sync"
 
 	"github.com/easymatic/easycontrol/handler"
+	"github.com/easymatic/easycontrol/handler/dummyhandler"
 	"github.com/easymatic/easycontrol/handler/loghandler"
 	"github.com/easymatic/easycontrol/handler/plchandler"
 )
 
 func Start() error {
 	eventchan := make(chan handler.Event, 100)
-	commandchan := make(chan handler.Event, 100)
-	// dummy := &dummyhandler.DummyHandler{}
+	commandchan := make(chan handler.Command, 100)
+	dummy := &dummyhandler.DummyHandler{}
 	log := &loghandler.LogHandler{}
 	// rh := &readerhandler.ReaderHandler{}
 	plc := &plchandler.PLCHandler{}
@@ -44,11 +45,11 @@ func Start() error {
 		}
 	}()
 
-	// wg.Add(1)
-	// go func() {
-	// defer wg.Done()
-	// dummy.Start(eventchan, commandchan)
-	// }()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		dummy.Start(eventchan, commandchan)
+	}()
 
 	wg.Wait()
 	return nil
