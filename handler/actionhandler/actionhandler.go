@@ -56,7 +56,9 @@ func (hndl *ActionHandler) Start() error {
 			event := e.(handler.Event)
 			for _, action := range hndl.Actions.Actions {
 				if action.Event == event {
-					hndl.SetTag(action.Commands[0].Command)
+					for _, command := range action.Commands {
+						hndl.SetTag(command.Command)
+					}
 				}
 			}
 		case <-hndl.Ctx.Done():

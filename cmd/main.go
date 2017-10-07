@@ -8,6 +8,7 @@ import (
 	"github.com/easymatic/easycontrol/handler/actionhandler"
 	"github.com/easymatic/easycontrol/handler/loghandler"
 	"github.com/easymatic/easycontrol/handler/plchandler"
+	"github.com/easymatic/easycontrol/handler/readerhandler"
 	"github.com/tjgq/broadcast"
 )
 
@@ -17,12 +18,12 @@ func Start() error {
 	// dummy := dummyhandler.NewDummyHandler()
 	action := actionhandler.NewActionHandler()
 	log := loghandler.NewLogHandler()
-	// rh := readerhandler.NewReaderHandler()
+	rh := readerhandler.NewReaderHandler()
 	plc := plchandler.NewPLCHandler()
 
 	handlers := []handler.Handler{}
 	// handlers = append(handlers, dummy)
-	// handlers = append(handlers, rh)
+	handlers = append(handlers, rh)
 	handlers = append(handlers, log)
 	handlers = append(handlers, plc)
 	handlers = append(handlers, action)

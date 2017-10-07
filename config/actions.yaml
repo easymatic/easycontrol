@@ -25,3 +25,17 @@ actions:
           tag:
             name: Y3
             value: 1
+  - name: cardreader
+    event:
+      source: readerhandler
+      tag:
+        name: Reader0
+        value: 10636976
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: Y3
+            value: 1
+ ~

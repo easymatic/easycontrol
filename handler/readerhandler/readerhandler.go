@@ -107,11 +107,3 @@ func (ah *ReaderHandler) processReaderData(data []byte) {
 		ah.Readers[idx].EventId = newEventId
 	}
 }
-
-func (ah *ReaderHandler) GetTags(key string) string {
-	return ""
-}
-
-func (ah *ReaderHandler) SetTag(key string, value string) {
-
-}
