@@ -14,21 +14,23 @@ import (
 
 type PLCHandler struct {
 	handler.BaseHandler
-	Tags map[int]*handler.Tag
+	// Tags       map[int]*handler.Tag
+	// OutputTags map[int]*handler.Tag
+	Tags   []Tag
+	Values map[string]string
 }
 
 const ON = 65280 // 0xFF00
 const OFF = 0    // 0x0000
 
+type Tag struct {
+	Name    string `yaml:"name"`
+	Address int    `yaml:"address"`
+}
+
 type Tags struct {
-	Input []struct {
-		Name    string `yaml:"name"`
-		Address int    `yaml:"address"`
-	} `yaml:"input"`
-	Output []struct {
-		Name    string `yaml:"name"`
-		Address int    `yaml:"address"`
-	} `yaml:"output"`
+	Input  []Tag `yaml:"input"`
+	Output []Tag `yaml:"output"`
 }
 
 func getTagsConfig() Tags {
@@ -44,15 +46,22 @@ func getTagsConfig() Tags {
 	return tags
 }
 
-func (ph *PLCHandler) Start(eventchan chan handler.Event, commandchan chan handler.Event) error {
-	ph.Tags = make(map[int]*handler.Tag)
-	ph.CommandChan = commandchan
+func (ph *PLCHandler) Start(eventchan chan handler.Event, commandchan chan handler.Command) error {
+	ph.CommandChanOut = commandchan
+	ph.Values = make(map[string]string)
+	ph.CommandChanIn = make(chan handler.Tag, 100)
 	ph.EventChan = eventchan
 	ctx := context.Background()
 	ph.Ctx, ph.Cancel = context.WithCancel(ctx)
 	fmt.Println("starting plc handler")
 	tags := getTagsConfig()
-	fmt.Printf("%+v\n", tags)
+	for _, tag := range tags.Input {
+		ph.Tags = append(ph.Tags, tag)
+	}
+	for _, tag := range tags.Output {
+		ph.Tags = append(ph.Tags, tag)
+	}
+	fmt.Printf("%+v\n", ph.Tags)
 	h := modbus.NewASCIIClientHandler("/dev/ttyPLC")
 	h.BaudRate = 9600
 	h.DataBits = 7
@@ -73,28 +82,25 @@ func (ph *PLCHandler) Start(eventchan chan handler.Event, commandchan chan handl
 		case <-ph.Ctx.Done():
 			fmt.Println("Context canceled")
 			return ph.Ctx.Err()
-		case command := <-ph.CommandChan:
+		case command := <-ph.CommandChanIn:
 			fmt.Printf("have command: %v\n", command)
 		default:
-			for _, tag := range tags.Input {
+			for _, tag := range ph.Tags {
 				results, err := client.ReadCoils(uint16(tag.Address), 1)
 				if err != nil {
 					fmt.Printf("ERROR: %v\n", err)
+					continue
 				}
-				if len(results) > 0 {
-					b := results[0] & 1
-					// fmt.Printf("read %s: %v\n", tag.Name, b)
-					t, already := ph.Tags[tag.Address]
-					if !already {
-						fmt.Println("create new one")
-						t = &handler.Tag{Name: tag.Name}
-						ph.Tags[tag.Address] = t
-					}
-					val := strconv.Itoa(int(b))
-					// fmt.Printf("%s and %s\n", t.Value, val)
-					if t.Value != val {
-						t.Value = val
-						ph.SendEvent(handler.Event{SourceId: t.Name, Handler: "plchandler", Data: t.Value})
+				b := results[0] & 1
+				newValue := strconv.Itoa(int(b))
+				value, already := ph.Values[tag.Name]
+				if !already {
+					fmt.Println("create new one")
+					ph.Values[tag.Name] = newValue
+				} else {
+					if value != newValue {
+						ph.Values[tag.Name] = newValue
+						ph.SendEvent(handler.Event{Tag: handler.Tag{Name: tag.Name, Value: newValue}})
 					}
 				}
 
