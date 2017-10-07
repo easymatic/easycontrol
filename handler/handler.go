@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"fmt"
+
+	"github.com/tjgq/broadcast"
 )
 
 type Handler interface {
@@ -23,16 +25,29 @@ type Command struct {
 }
 
 type BaseHandler struct {
-	EventChan      chan Event
+	Name           string
 	CommandChanIn  chan Tag
 	CommandChanOut chan Command
 	Handler
-	Ctx    context.Context
-	Cancel context.CancelFunc
+	Ctx         context.Context
+	Cancel      context.CancelFunc
+	EventReader *broadcast.Listener
+	Broadcaster *broadcast.Broadcaster
+}
+
+func (bh *BaseHandler) Init() {
+	bh.CommandChanIn = make(chan Tag, 100)
+}
+
+func (bh *BaseHandler) Start() error {
+	fmt.Printf("starting %v handler \n", bh.Name)
+	bh.EventReader = bh.Broadcaster.Listen()
+	return nil
 }
 
 func (bh *BaseHandler) Stop() {
 	bh.Cancel()
+	bh.EventReader.Close()
 	fmt.Println("stopping dummy handler")
 }
 
@@ -43,7 +58,9 @@ func (bh *BaseHandler) SetTag(command Command) {
 
 func (bh *BaseHandler) SendEvent(tag Event) {
 	fmt.Printf("sending event %v\n", tag)
-	bh.EventChan <- tag
+	//bh.EventChan <- tag
+	bh.Broadcaster.Send(tag)
+	fmt.Println("event sent")
 }
 
 type Tag struct {

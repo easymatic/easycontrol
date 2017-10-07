@@ -16,8 +16,9 @@ type PLCHandler struct {
 	handler.BaseHandler
 	// Tags       map[int]*handler.Tag
 	// OutputTags map[int]*handler.Tag
-	Tags   []Tag
-	Values map[string]string
+	Tags          []Tag
+	Values        map[string]string
+	ClientHandler *modbus.ASCIIClientHandler
 }
 
 const ON = 65280 // 0xFF00
@@ -45,23 +46,7 @@ func getTagsConfig() Tags {
 	}
 	return tags
 }
-
-func (ph *PLCHandler) Start(eventchan chan handler.Event, commandchan chan handler.Command) error {
-	ph.CommandChanOut = commandchan
-	ph.Values = make(map[string]string)
-	ph.CommandChanIn = make(chan handler.Tag, 100)
-	ph.EventChan = eventchan
-	ctx := context.Background()
-	ph.Ctx, ph.Cancel = context.WithCancel(ctx)
-	fmt.Println("starting plc handler")
-	tags := getTagsConfig()
-	for _, tag := range tags.Input {
-		ph.Tags = append(ph.Tags, tag)
-	}
-	for _, tag := range tags.Output {
-		ph.Tags = append(ph.Tags, tag)
-	}
-	fmt.Printf("%+v\n", ph.Tags)
+func NewPLCHandler() *PLCHandler {
 	h := modbus.NewASCIIClientHandler("/dev/ttyPLC")
 	h.BaudRate = 9600
 	h.DataBits = 7
@@ -70,13 +55,35 @@ func (ph *PLCHandler) Start(eventchan chan handler.Event, commandchan chan handl
 	h.SlaveId = 1
 	h.Timeout = 2 * time.Second
 
-	err := h.Connect()
+	rv := &PLCHandler{ClientHandler: h}
+	rv.Init()
+	rv.Name = "plchandler"
+	return rv
+}
+
+func (ph *PLCHandler) Start() error {
+	ph.BaseHandler.Start()
+
+	ph.Values = make(map[string]string)
+	ctx := context.Background()
+	ph.Ctx, ph.Cancel = context.WithCancel(ctx)
+
+	tags := getTagsConfig()
+	for _, tag := range tags.Input {
+		ph.Tags = append(ph.Tags, tag)
+	}
+	for _, tag := range tags.Output {
+		ph.Tags = append(ph.Tags, tag)
+	}
+	fmt.Printf("%+v\n", ph.Tags)
+
+	err := ph.ClientHandler.Connect()
 	if err != nil {
 		return err
 	}
-	defer h.Close()
+	defer ph.ClientHandler.Close()
 	//
-	client := modbus.NewClient(h)
+	client := modbus.NewClient(ph.ClientHandler)
 	for {
 		select {
 		case <-ph.Ctx.Done():

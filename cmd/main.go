@@ -5,18 +5,33 @@ import (
 	"sync"
 
 	"github.com/easymatic/easycontrol/handler"
-	"github.com/easymatic/easycontrol/handler/dummyhandler"
 	"github.com/easymatic/easycontrol/handler/loghandler"
-	"github.com/easymatic/easycontrol/handler/plchandler"
+	"github.com/easymatic/easycontrol/handler/readerhandler"
+	"github.com/tjgq/broadcast"
 )
 
 func Start() error {
-	eventchan := make(chan handler.Event, 100)
 	commandchan := make(chan handler.Command, 100)
-	dummy := &dummyhandler.DummyHandler{}
-	log := &loghandler.LogHandler{}
-	// rh := &readerhandler.ReaderHandler{}
-	plc := &plchandler.PLCHandler{}
+	b := broadcast.New(10)
+	/*
+		dummy := &dummyhandler.DummyHandler{}
+		log := &loghandler.LogHandler{}
+		rh := &readerhandler.ReaderHandler{}
+		plc := &plchandler.PLCHandler{}
+	*/
+	//dummy := dummyhandler.NewDummyHandler()
+	log := loghandler.NewLogHandler()
+	rh := readerhandler.NewReaderHandler()
+	//	plc := plchandler.NewPLCHandler()
+
+	log.Broadcaster = b
+	log.CommandChanOut = commandchan
+	//dummy.Broadcaster = b
+	//dummy.CommandChanOut = commandchan
+	//	plc.Broadcaster = b
+	//	plc.CommandChanOut = commandchan
+	rh.Broadcaster = b
+	rh.CommandChanOut = commandchan
 	// time.AfterFunc(time.Second*5, dummy.Stop)
 	// time.AfterFunc(time.Second*5, log.Stop)
 	// time.AfterFunc(time.Second*5, plc.Stop)
@@ -26,31 +41,34 @@ func Start() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := log.Start(eventchan, commandchan); err != nil {
+		if err := log.Start(); err != nil {
 			fmt.Printf("Error while running log handler: %v\n", err)
 		}
 	}()
-	// wg.Add(1)
-	// go func() {
-	// defer wg.Done()
-	// if err := rh.Start(eventchan); err != nil {
-	// fmt.Printf("Error while running reader handler: %v\n", err)
-	// }
-	// }()
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := plc.Start(eventchan, commandchan); err != nil {
-			fmt.Printf("Error while running plc handler: %v\n", err)
+		if err := rh.Start(); err != nil {
+			fmt.Printf("Error while running reader handler: %v\n", err)
 		}
 	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		dummy.Start(eventchan, commandchan)
-	}()
-
+	/*
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			dummy.Start()
+		}()
+	*/
+	/*
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := plc.Start(); err != nil {
+				fmt.Printf("Error while running plc handler: %v\n", err)
+			}
+		}()
+	*/
 	wg.Wait()
 	return nil
 }

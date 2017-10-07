@@ -12,16 +12,23 @@ type DummyHandler struct {
 	handler.BaseHandler
 }
 
-func (dh *DummyHandler) Start(eventchan chan handler.Event, commandchan chan handler.Command) error {
-	dh.CommandChanOut = commandchan
-	dh.EventChan = eventchan
+func NewDummyHandler() *DummyHandler {
+	rv := &DummyHandler{}
+	rv.Init()
+	rv.Name = "dummyhandler"
+	return rv
+}
+
+func (dh *DummyHandler) Start() error {
+	dh.BaseHandler.Start()
+
 	ctx := context.Background()
 	dh.Ctx, dh.Cancel = context.WithCancel(ctx)
-	fmt.Println("starting dummy handler")
+
 	for {
 		select {
 		case <-time.After(1 * time.Second):
-			dh.SendEvent(handler.Event{Source: "dummyhandler", Tag: handler.Tag{Name: "sometag", Value: "value"}})
+			dh.SendEvent(handler.Event{Source: dh.Name, Tag: handler.Tag{Name: "sometag", Value: "value"}})
 			dh.SetTag(handler.Command{Destination: "plchandler", Tag: handler.Tag{Name: "sometag", Value: "value"}})
 		case <-dh.Ctx.Done():
 			fmt.Println("Context canceled")
