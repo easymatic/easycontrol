@@ -23,37 +23,11 @@ type Reader struct {
 type ReaderHandler struct {
 	handler.BaseHandler
 
-	//ClientHandler *modbus.RTUClientHandler
-	Readers [READER_COUNT]Reader
+	ClientHandler *modbus.RTUClientHandler
+	Readers       [READER_COUNT]Reader
 }
 
-/*
 func NewReaderHandler() *ReaderHandler {
-	handler := modbus.NewRTUClientHandler("/dev/ttyMDB")
-	handler.BaudRate = 9600
-	handler.DataBits = 8
-	handler.Parity = "N"
-	handler.StopBits = 1
-	handler.SlaveId = 1
-	handler.Timeout = 5 * time.Second
-
-	readers := [READER_COUNT]Reader{
-		Reader{EventId: -1},
-		Reader{EventId: -1}}
-
-	return &ReaderHandler{ClientHandler: handler, Readers: readers}
-}
-*/
-
-func (ah *ReaderHandler) Start(eventchan chan handler.Event, commandchan chan handler.Event) error {
-	ah.CommandChan = commandchan
-	fmt.Println("starting reader handler")
-
-	ah.EventChan = eventchan
-
-	ctx := context.Background()
-	ah.Ctx, ah.Cancel = context.WithCancel(ctx)
-
 	h := modbus.NewRTUClientHandler("/dev/ttyMDB")
 	h.BaudRate = 9600
 	h.DataBits = 8
@@ -62,18 +36,30 @@ func (ah *ReaderHandler) Start(eventchan chan handler.Event, commandchan chan ha
 	h.SlaveId = 1
 	h.Timeout = 5 * time.Second
 
-	ah.Readers = [READER_COUNT]Reader{
+	readers := [READER_COUNT]Reader{
 		Reader{EventId: -1},
 		Reader{EventId: -1}}
 
-	err := h.Connect()
+	rv := &ReaderHandler{ClientHandler: h, Readers: readers}
+	rv.Init()
+	rv.Name = "readerhandler"
+	return rv
+}
+
+func (ah *ReaderHandler) Start() error {
+	ah.BaseHandler.Start()
+
+	ctx := context.Background()
+	ah.Ctx, ah.Cancel = context.WithCancel(ctx)
+
+	err := ah.ClientHandler.Connect()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer h.Close()
+	defer ah.ClientHandler.Close()
 
-	client := modbus.NewClient(h)
+	client := modbus.NewClient(ah.ClientHandler)
 	for {
 		select {
 		case <-ah.Ctx.Done():
@@ -110,12 +96,16 @@ func (ah *ReaderHandler) processReaderData(data []byte) {
 				d2 := int(data[eventIdPos+2]) << 8
 				d3 := int(data[eventIdPos+3])
 				ah.Readers[idx].CardCode = d1 | d2 | d3
-				t := handler.Event{
-					Handler:  "readerhandler",
-					SourceId: fmt.Sprintf("%s%d", "Reader", idx),
-					Data:     strconv.Itoa(ah.Readers[idx].CardCode)}
 
-				ah.EventChan <- t
+				t := handler.Tag{
+					Name:  fmt.Sprintf("%s%d", "Reader", idx),
+					Value: strconv.Itoa(ah.Readers[idx].CardCode)}
+
+				e := handler.Event{
+					Source: ah.Name,
+					Tag:    t}
+
+				ah.SendEvent(e)
 			}
 		}
 		ah.Readers[idx].EventId = newEventId
