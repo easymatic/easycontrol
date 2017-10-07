@@ -1,0 +1,27 @@
+actions:
+  - name: turnOffY3
+    event:
+      source: plchandler
+      tag:
+        name: GREEN
+        value: 0
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: Y3
+            value: 0
+  - name: turnOnY3
+    event:
+      handler: plchandler
+      tag:
+        name: GREEN
+        value: 1
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: Y3
+            value: 1

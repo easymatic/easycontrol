@@ -5,72 +5,58 @@ import (
 	"sync"
 
 	"github.com/easymatic/easycontrol/handler"
+	"github.com/easymatic/easycontrol/handler/actionhandler"
 	"github.com/easymatic/easycontrol/handler/loghandler"
-	"github.com/easymatic/easycontrol/handler/readerhandler"
+	"github.com/easymatic/easycontrol/handler/plchandler"
 	"github.com/tjgq/broadcast"
 )
 
 func Start() error {
 	commandchan := make(chan handler.Command, 100)
 	b := broadcast.New(10)
-	/*
-		dummy := &dummyhandler.DummyHandler{}
-		log := &loghandler.LogHandler{}
-		rh := &readerhandler.ReaderHandler{}
-		plc := &plchandler.PLCHandler{}
-	*/
-	//dummy := dummyhandler.NewDummyHandler()
+	// dummy := dummyhandler.NewDummyHandler()
+	action := actionhandler.NewActionHandler()
 	log := loghandler.NewLogHandler()
-	rh := readerhandler.NewReaderHandler()
-	//	plc := plchandler.NewPLCHandler()
+	// rh := readerhandler.NewReaderHandler()
+	plc := plchandler.NewPLCHandler()
 
-	log.Broadcaster = b
-	log.CommandChanOut = commandchan
-	//dummy.Broadcaster = b
-	//dummy.CommandChanOut = commandchan
-	//	plc.Broadcaster = b
-	//	plc.CommandChanOut = commandchan
-	rh.Broadcaster = b
-	rh.CommandChanOut = commandchan
-	// time.AfterFunc(time.Second*5, dummy.Stop)
-	// time.AfterFunc(time.Second*5, log.Stop)
-	// time.AfterFunc(time.Second*5, plc.Stop)
-
+	handlers := []handler.Handler{}
+	// handlers = append(handlers, dummy)
+	// handlers = append(handlers, rh)
+	handlers = append(handlers, log)
+	handlers = append(handlers, plc)
+	handlers = append(handlers, action)
+	// handlers = append(handlers, dummy)
 	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := log.Start(); err != nil {
-			fmt.Printf("Error while running log handler: %v\n", err)
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := rh.Start(); err != nil {
-			fmt.Printf("Error while running reader handler: %v\n", err)
-		}
-	}()
-	/*
+	for _, h := range handlers {
+		h.SetBroadcaster(b)
+		h.SetCommandChan(commandchan)
 		wg.Add(1)
-		go func() {
+		go func(h handler.Handler) {
 			defer wg.Done()
-			dummy.Start()
-		}()
-	*/
-	/*
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if err := plc.Start(); err != nil {
-				fmt.Printf("Error while running plc handler: %v\n", err)
+			if err := h.Start(); err != nil {
+				fmt.Printf("Error while running log handler: %v\n", err)
 			}
-		}()
-	*/
-	wg.Wait()
-	return nil
+		}(h)
+	}
+	// wg.Add(1)
+	// go func() {
+	// defer wg.Done()
+	// if err := log.Start(); err != nil {
+	// fmt.Printf("Error while running log handler: %v\n", err)
+	// }
+	// }()
+
+	for {
+		select {
+		case command := <-commandchan:
+			for _, h := range handlers {
+				if command.Destination == h.GetName() {
+					h.GetCommandChan() <- command.Tag
+				}
+			}
+		}
+	}
 }
 
 func main() {

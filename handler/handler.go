@@ -8,20 +8,24 @@ import (
 )
 
 type Handler interface {
-	Start() error
 	Stop()
+	Start() error
 	GetTags(key string) string
-	SetTag(key string, value string)
+	SetTag(command Command)
+	GetCommandChan() chan Tag
+	GetName() string
+	SetBroadcaster(broadcaster *broadcast.Broadcaster)
+	SetCommandChan(commandchan chan Command)
 }
 
 type Event struct {
-	Source string
-	Tag    Tag
+	Source string `yaml:"source"`
+	Tag    Tag    `yaml:"tag"`
 }
 
 type Command struct {
-	Destination string
-	Tag         Tag
+	Destination string `yaml:"destination"`
+	Tag         Tag    `yaml:"tag"`
 }
 
 type BaseHandler struct {
@@ -35,14 +39,31 @@ type BaseHandler struct {
 	Broadcaster *broadcast.Broadcaster
 }
 
+func (bh *BaseHandler) SetCommandChan(commandchan chan Command) {
+	bh.CommandChanOut = commandchan
+}
+
+func (bh *BaseHandler) SetBroadcaster(broadcaster *broadcast.Broadcaster) {
+	bh.Broadcaster = broadcaster
+}
+
 func (bh *BaseHandler) Init() {
 	bh.CommandChanIn = make(chan Tag, 100)
+	ctx := context.Background()
+	bh.Ctx, bh.Cancel = context.WithCancel(ctx)
 }
 
 func (bh *BaseHandler) Start() error {
 	fmt.Printf("starting %v handler \n", bh.Name)
-	bh.EventReader = bh.Broadcaster.Listen()
 	return nil
+}
+
+func (bh *BaseHandler) GetCommandChan() chan Tag {
+	return bh.CommandChanIn
+}
+
+func (bh *BaseHandler) GetName() string {
+	return bh.Name
 }
 
 func (bh *BaseHandler) Stop() {
@@ -57,13 +78,11 @@ func (bh *BaseHandler) SetTag(command Command) {
 }
 
 func (bh *BaseHandler) SendEvent(tag Event) {
-	fmt.Printf("sending event %v\n", tag)
-	//bh.EventChan <- tag
+	// fmt.Printf("sending event %v\n", tag)
 	bh.Broadcaster.Send(tag)
-	fmt.Println("event sent")
 }
 
 type Tag struct {
-	Name  string
-	Value string
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
 }
