@@ -1,7 +1,6 @@
 package loghandler
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/easymatic/easycontrol/handler"
@@ -20,9 +19,7 @@ func NewLogHandler() *LogHandler {
 
 func (lh *LogHandler) Start() error {
 	lh.BaseHandler.Start()
-
-	ctx := context.Background()
-	lh.Ctx, lh.Cancel = context.WithCancel(ctx)
+	lh.EventReader = lh.Broadcaster.Listen()
 
 	for {
 		select {

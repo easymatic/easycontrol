@@ -1,7 +1,6 @@
 package plchandler
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -65,8 +64,6 @@ func (ph *PLCHandler) Start() error {
 	ph.BaseHandler.Start()
 
 	ph.Values = make(map[string]string)
-	ctx := context.Background()
-	ph.Ctx, ph.Cancel = context.WithCancel(ctx)
 
 	tags := getTagsConfig()
 	for _, tag := range tags.Input {
@@ -90,7 +87,20 @@ func (ph *PLCHandler) Start() error {
 			fmt.Println("Context canceled")
 			return ph.Ctx.Err()
 		case command := <-ph.CommandChanIn:
-			fmt.Printf("have command: %v\n", command)
+			// fmt.Printf("have command: %v\n", command)
+			for _, tag := range ph.Tags {
+				if tag.Name == command.Name {
+					// fmt.Printf("address: %v\n", tag.Address)
+					var val uint16 = ON
+					if command.Value == "0" {
+						val = OFF
+					}
+					_, err = client.WriteSingleCoil(uint16(tag.Address), val)
+					if err != nil {
+						fmt.Printf("error: %v\n", err)
+					}
+				}
+			}
 		default:
 			for _, tag := range ph.Tags {
 				results, err := client.ReadCoils(uint16(tag.Address), 1)
@@ -107,7 +117,7 @@ func (ph *PLCHandler) Start() error {
 				} else {
 					if value != newValue {
 						ph.Values[tag.Name] = newValue
-						ph.SendEvent(handler.Event{Tag: handler.Tag{Name: tag.Name, Value: newValue}})
+						ph.SendEvent(handler.Event{Source: "plchandler", Tag: handler.Tag{Name: tag.Name, Value: newValue}})
 					}
 				}
 

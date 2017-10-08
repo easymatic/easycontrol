@@ -1,7 +1,6 @@
 package readerhandler
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -48,9 +47,6 @@ func NewReaderHandler() *ReaderHandler {
 
 func (ah *ReaderHandler) Start() error {
 	ah.BaseHandler.Start()
-
-	ctx := context.Background()
-	ah.Ctx, ah.Cancel = context.WithCancel(ctx)
 
 	err := ah.ClientHandler.Connect()
 	if err != nil {
@@ -110,12 +106,4 @@ func (ah *ReaderHandler) processReaderData(data []byte) {
 		}
 		ah.Readers[idx].EventId = newEventId
 	}
-}
-
-func (ah *ReaderHandler) GetTags(key string) string {
-	return ""
-}
-
-func (ah *ReaderHandler) SetTag(key string, value string) {
-
 }

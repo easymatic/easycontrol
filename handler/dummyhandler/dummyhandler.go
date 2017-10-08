@@ -1,7 +1,6 @@
 package dummyhandler
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -22,14 +21,17 @@ func NewDummyHandler() *DummyHandler {
 func (dh *DummyHandler) Start() error {
 	dh.BaseHandler.Start()
 
-	ctx := context.Background()
-	dh.Ctx, dh.Cancel = context.WithCancel(ctx)
-
+	val := "0"
 	for {
 		select {
 		case <-time.After(1 * time.Second):
-			dh.SendEvent(handler.Event{Source: dh.Name, Tag: handler.Tag{Name: "sometag", Value: "value"}})
-			dh.SetTag(handler.Command{Destination: "plchandler", Tag: handler.Tag{Name: "sometag", Value: "value"}})
+			// dh.SendEvent(handler.Event{Source: "dummyhandler", Tag: handler.Tag{Name: "sometag", Value: "value"}})
+			dh.SetTag(handler.Command{Destination: "plchandler", Tag: handler.Tag{Name: "Y3", Value: val}})
+			if val == "0" {
+				val = "1"
+			} else {
+				val = "0"
+			}
 		case <-dh.Ctx.Done():
 			fmt.Println("Context canceled")
 			return dh.Ctx.Err()
