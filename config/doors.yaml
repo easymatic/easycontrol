@@ -1,0 +1,19 @@
+doors:
+  - name: door1
+    close:
+      source: plchandler
+      tag:
+        name: GREEN
+    lock:
+      source: plchandler
+      tag:
+        name: Y3
+  - name: door2
+    close:
+      source: plchandler
+      tag:
+        name: RED
+    lock:
+      source: plchandler
+      tag:
+        name: Y4

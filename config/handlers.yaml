@@ -9,3 +9,5 @@ handlers:
     run: yes
   - name: loghandler
     run: yes
+  - name: doorhandler
+    run: yes

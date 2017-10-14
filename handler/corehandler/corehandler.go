@@ -9,6 +9,7 @@ import (
 
 	"github.com/easymatic/easycontrol/handler"
 	"github.com/easymatic/easycontrol/handler/actionhandler"
+	"github.com/easymatic/easycontrol/handler/doorhandler"
 	"github.com/easymatic/easycontrol/handler/dummyhandler"
 	"github.com/easymatic/easycontrol/handler/loghandler"
 	"github.com/easymatic/easycontrol/handler/plchandler"
@@ -20,7 +21,7 @@ type Config struct {
 	Handlers []struct {
 		Name string `yaml:"name"`
 		Run  bool   `yaml:"run"`
-	}
+	} `yaml:"handlers"`
 }
 
 func getHandlersConfig() Config {
@@ -66,6 +67,7 @@ func (hndl *CoreHandler) RunCommand(command handler.Command) {
 }
 
 func (hndl *CoreHandler) loadHandler() map[string]handler.Handler {
+	door := doorhandler.NewDoorHandler(hndl)
 	dummy := dummyhandler.NewDummyHandler(hndl)
 	action := actionhandler.NewActionHandler(hndl)
 	log := loghandler.NewLogHandler(hndl)
@@ -78,6 +80,7 @@ func (hndl *CoreHandler) loadHandler() map[string]handler.Handler {
 		log.GetName():    log,
 		plc.GetName():    plc,
 		action.GetName(): action,
+		door.GetName():   door,
 	}
 	return handlers
 }
@@ -90,7 +93,6 @@ func (hndl *CoreHandler) Start() error {
 	hndl.handlers = hndl.loadHandler()
 	var wg sync.WaitGroup
 	for _, h := range hndl.config.Handlers {
-		fmt.Printf("run: %v\n", h.Run)
 		if h.Run {
 			if hh, ok := hndl.handlers[h.Name]; ok {
 				wg.Add(1)
