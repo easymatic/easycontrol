@@ -26,7 +26,7 @@ type ReaderHandler struct {
 	Readers       [READER_COUNT]Reader
 }
 
-func NewReaderHandler() *ReaderHandler {
+func NewReaderHandler(core handler.CoreHandler) *ReaderHandler {
 	h := modbus.NewRTUClientHandler("/dev/ttyMDB")
 	h.BaudRate = 9600
 	h.DataBits = 8
@@ -42,6 +42,7 @@ func NewReaderHandler() *ReaderHandler {
 	rv := &ReaderHandler{ClientHandler: h, Readers: readers}
 	rv.Init()
 	rv.Name = "readerhandler"
+	rv.CoreHandler = core
 	return rv
 }
 

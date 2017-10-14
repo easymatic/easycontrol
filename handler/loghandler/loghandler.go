@@ -10,25 +10,26 @@ type LogHandler struct {
 	handler.BaseHandler
 }
 
-func NewLogHandler() *LogHandler {
+func NewLogHandler(core handler.CoreHandler) *LogHandler {
 	rv := &LogHandler{}
 	rv.Init()
 	rv.Name = "loghandler"
+	rv.CoreHandler = core
 	return rv
 }
 
-func (lh *LogHandler) Start() error {
-	lh.BaseHandler.Start()
-	lh.EventReader = lh.Broadcaster.Listen()
+func (hndl *LogHandler) Start() error {
+	hndl.BaseHandler.Start()
+	hndl.EventReader = hndl.CoreHandler.GetEventReader()
 
 	for {
 		select {
-		case e := <-lh.EventReader.Ch:
+		case e := <-hndl.EventReader.Ch:
 			event := e.(handler.Event)
 			fmt.Printf("loghander have event: [%s] %s=%s\n", event.Source, event.Tag.Name, event.Tag.Value)
-		case <-lh.Ctx.Done():
+		case <-hndl.Ctx.Done():
 			fmt.Println("Context canceled")
-			return lh.Ctx.Err()
+			return hndl.Ctx.Err()
 		}
 	}
 }

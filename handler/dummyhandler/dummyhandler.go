@@ -11,10 +11,11 @@ type DummyHandler struct {
 	handler.BaseHandler
 }
 
-func NewDummyHandler() *DummyHandler {
+func NewDummyHandler(core handler.CoreHandler) *DummyHandler {
 	rv := &DummyHandler{}
 	rv.Init()
 	rv.Name = "dummyhandler"
+	rv.CoreHandler = core
 	return rv
 }
 
@@ -25,8 +26,7 @@ func (dh *DummyHandler) Start() error {
 	for {
 		select {
 		case <-time.After(1 * time.Second):
-			// dh.SendEvent(handler.Event{Source: "dummyhandler", Tag: handler.Tag{Name: "sometag", Value: "value"}})
-			dh.SetTag(handler.Command{Destination: "plchandler", Tag: handler.Tag{Name: "Y3", Value: val}})
+			dh.CoreHandler.RunCommand(handler.Command{Destination: "plchandler", Tag: handler.Tag{Name: "Y3", Value: val}})
 			if val == "0" {
 				val = "1"
 			} else {

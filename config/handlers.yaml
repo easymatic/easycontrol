@@ -1,0 +1,11 @@
+handlers:
+  - name: dummyhandler
+    run: false
+  - name: plchandler
+    run: yes
+  - name: actionhandler
+    run: yes
+  - name: readerhandler
+    run: yes
+  - name: loghandler
+    run: yes

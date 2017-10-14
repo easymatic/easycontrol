@@ -42,31 +42,31 @@ func getActionsConfig() Config {
 
 type ActionHandler struct {
 	handler.BaseHandler
-	Config Config
+	config Config
 }
 
-func NewActionHandler() *ActionHandler {
+func NewActionHandler(core handler.CoreHandler) *ActionHandler {
 	rv := &ActionHandler{}
 	rv.Init()
 	rv.Name = "actionhandler"
-	rv.Config = getActionsConfig()
+	rv.config = getActionsConfig()
+	rv.CoreHandler = core
 	return rv
 }
 
 func (hndl *ActionHandler) Start() error {
-	fmt.Printf("actions: %v\n", hndl.Config)
 	hndl.BaseHandler.Start()
-	hndl.EventReader = hndl.Broadcaster.Listen()
+	hndl.EventReader = hndl.CoreHandler.GetEventReader()
 
 	for {
 		select {
 		case e := <-hndl.EventReader.Ch:
 			event := e.(handler.Event)
-			for _, action := range hndl.Config.Actions {
+			for _, action := range hndl.config.Actions {
 				if action.Event == event {
 					for _, command := range action.Commands {
 						if command.Name == COMMAND_SET {
-							hndl.SetTag(command.Command)
+							hndl.CoreHandler.RunCommand(command.Command)
 						} else if command.Name == COMMAND_DELAY {
 							time.Sleep(time.Second * time.Duration(command.Params.(int)))
 						}
