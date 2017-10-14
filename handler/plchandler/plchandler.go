@@ -45,7 +45,7 @@ func getTagsConfig() Tags {
 	}
 	return tags
 }
-func NewPLCHandler() *PLCHandler {
+func NewPLCHandler(core handler.CoreHandler) *PLCHandler {
 	h := modbus.NewASCIIClientHandler("/dev/ttyPLC")
 	h.BaudRate = 9600
 	h.DataBits = 7
@@ -57,6 +57,7 @@ func NewPLCHandler() *PLCHandler {
 	rv := &PLCHandler{ClientHandler: h}
 	rv.Init()
 	rv.Name = "plchandler"
+	rv.CoreHandler = core
 	return rv
 }
 

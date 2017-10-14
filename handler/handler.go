@@ -8,14 +8,19 @@ import (
 )
 
 type Handler interface {
-	Stop()
-	Start() error
-	GetTags(key string) string
-	SetTag(command Command)
-	GetCommandChan() chan Tag
 	GetName() string
-	SetBroadcaster(broadcaster *broadcast.Broadcaster)
-	SetCommandChan(commandchan chan Command)
+	Start() error
+	Stop()
+	SetTag(tag Tag)
+	GetTag(key string) string
+	GetTags() []Tag
+}
+
+type CoreHandler interface {
+	Handler
+	SendEvent(tag Event)
+	GetEventReader() *broadcast.Listener
+	RunCommand(command Command)
 }
 
 type Event struct {
@@ -29,57 +34,48 @@ type Command struct {
 }
 
 type BaseHandler struct {
-	Name           string
-	CommandChanIn  chan Tag
-	CommandChanOut chan Command
 	Handler
-	Ctx         context.Context
-	Cancel      context.CancelFunc
-	EventReader *broadcast.Listener
-	Broadcaster *broadcast.Broadcaster
+	Name          string
+	CommandChanIn chan Tag
+	CoreHandler   CoreHandler
+	Ctx           context.Context
+	cancel        context.CancelFunc
+	EventReader   *broadcast.Listener
 }
 
-func (bh *BaseHandler) SetCommandChan(commandchan chan Command) {
-	bh.CommandChanOut = commandchan
-}
-
-func (bh *BaseHandler) SetBroadcaster(broadcaster *broadcast.Broadcaster) {
-	bh.Broadcaster = broadcaster
-}
-
-func (bh *BaseHandler) Init() {
-	bh.CommandChanIn = make(chan Tag, 100)
+func (hndl *BaseHandler) Init() {
+	hndl.CommandChanIn = make(chan Tag, 100)
 	ctx := context.Background()
-	bh.Ctx, bh.Cancel = context.WithCancel(ctx)
+	hndl.Ctx, hndl.cancel = context.WithCancel(ctx)
 }
 
-func (bh *BaseHandler) Start() error {
-	fmt.Printf("starting %v handler \n", bh.Name)
+func (hndl *BaseHandler) Start() error {
+	fmt.Printf("starting %v handler \n", hndl.Name)
 	return nil
 }
 
-func (bh *BaseHandler) GetCommandChan() chan Tag {
-	return bh.CommandChanIn
+func (hndl *BaseHandler) GetCommandChan() chan Tag {
+	return hndl.CommandChanIn
 }
 
-func (bh *BaseHandler) GetName() string {
-	return bh.Name
+func (hndl *BaseHandler) GetName() string {
+	return hndl.Name
 }
 
-func (bh *BaseHandler) Stop() {
-	bh.Cancel()
-	bh.EventReader.Close()
+func (hndl *BaseHandler) Stop() {
+	hndl.cancel()
+	hndl.EventReader.Close()
 	fmt.Println("stopping dummy handler")
 }
 
-func (bh *BaseHandler) SetTag(command Command) {
-	fmt.Printf("setting tag %v\n", command)
-	bh.CommandChanOut <- command
+func (hndl *BaseHandler) SetTag(tag Tag) {
+	// fmt.Printf("setting tag %v\n", command)
+	hndl.CommandChanIn <- tag
 }
 
-func (bh *BaseHandler) SendEvent(tag Event) {
+func (hndl *BaseHandler) SendEvent(tag Event) {
 	// fmt.Printf("sending event %v\n", tag)
-	bh.Broadcaster.Send(tag)
+	hndl.CoreHandler.SendEvent(tag)
 }
 
 type Tag struct {
