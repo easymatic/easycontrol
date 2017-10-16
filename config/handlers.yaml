@@ -1,13 +1,15 @@
 handlers:
   - name: dummyhandler
-    run: false
-  - name: plchandler
     run: yes
+  - name: plchandler
+    run: no
   - name: actionhandler
     run: yes
   - name: readerhandler
-    run: yes
+    run: no
   - name: loghandler
     run: yes
   - name: doorhandler
+    run: yes
+  - name: accesshandler
     run: yes

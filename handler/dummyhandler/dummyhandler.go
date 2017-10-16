@@ -19,22 +19,21 @@ func NewDummyHandler(core handler.CoreHandler) *DummyHandler {
 	return rv
 }
 
-func (dh *DummyHandler) Start() error {
-	dh.BaseHandler.Start()
+func (hndl *DummyHandler) Start() error {
+	hndl.BaseHandler.Start()
 
-	val := "0"
 	for {
 		select {
 		case <-time.After(1 * time.Second):
-			dh.CoreHandler.RunCommand(handler.Command{Destination: "plchandler", Tag: handler.Tag{Name: "Y3", Value: val}})
-			if val == "0" {
-				val = "1"
-			} else {
-				val = "0"
-			}
-		case <-dh.Ctx.Done():
+			ev := handler.Event{
+				Source: "readerhandler",
+				Tag: handler.Tag{
+					Name:  "Reader0",
+					Value: "10636976"}}
+			hndl.SendEvent(ev)
+		case <-hndl.Ctx.Done():
 			fmt.Println("Context canceled")
-			return dh.Ctx.Err()
+			return hndl.Ctx.Err()
 		}
 	}
 }

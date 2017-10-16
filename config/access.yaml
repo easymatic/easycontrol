@@ -1,0 +1,7 @@
+access:
+  - name: enter
+    reader:
+      source: readerhandler
+      tag:
+        name: Reader0
+    cards: ['10636976']

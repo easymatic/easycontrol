@@ -8,6 +8,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/easymatic/easycontrol/handler"
+	"github.com/easymatic/easycontrol/handler/accesshandler"
 	"github.com/easymatic/easycontrol/handler/actionhandler"
 	"github.com/easymatic/easycontrol/handler/doorhandler"
 	"github.com/easymatic/easycontrol/handler/dummyhandler"
@@ -67,6 +68,7 @@ func (hndl *CoreHandler) RunCommand(command handler.Command) {
 }
 
 func (hndl *CoreHandler) loadHandler() map[string]handler.Handler {
+	access := accesshandler.NewAccessHandler(hndl)
 	door := doorhandler.NewDoorHandler(hndl)
 	dummy := dummyhandler.NewDummyHandler(hndl)
 	action := actionhandler.NewActionHandler(hndl)
@@ -81,6 +83,7 @@ func (hndl *CoreHandler) loadHandler() map[string]handler.Handler {
 		plc.GetName():    plc,
 		action.GetName(): action,
 		door.GetName():   door,
+		access.GetName(): access,
 	}
 	return handlers
 }
@@ -110,6 +113,6 @@ func (hndl *CoreHandler) Start() error {
 }
 
 func (hndl *CoreHandler) SendEvent(tag handler.Event) {
-	fmt.Printf("sending event in corehandler%v\n", tag)
+	// fmt.Printf("sending event in corehandler%v\n", tag)
 	hndl.broadcaster.Send(tag)
 }
