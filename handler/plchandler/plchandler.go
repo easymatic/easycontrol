@@ -84,14 +84,13 @@ func makePollingMemBlocks(tagsMemBlocks []MemBlock) []MemBlock {
 	}
 
 	rv := []MemBlock{}
-	sortedBlocks := tagsMemBlocks
 
-	sort.Slice(sortedBlocks, func(i, j int) bool {
-		return sortedBlocks[i].address < sortedBlocks[j].address
+	sort.Slice(tagsMemBlocks, func(i, j int) bool {
+		return tagsMemBlocks[i].address < tagsMemBlocks[j].address
 	})
 
 	block := MemBlock{tags: []*Tag{}}
-	for _, mb := range sortedBlocks {
+	for _, mb := range tagsMemBlocks {
 		if block.size == 0 {
 			block.address = mb.address
 			block.size = mb.size
