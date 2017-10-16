@@ -14,9 +14,9 @@ import (
 
 type PLCHandler struct {
 	handler.BaseHandler
-	Tags             map[string]*Tag
-	PollingMemBlocks []MemBlock
-	ClientHandler    *modbus.ASCIIClientHandler
+	tags             map[string]*Tag
+	pollingMemBlocks []MemBlock
+	clientHandler    *modbus.ASCIIClientHandler
 }
 
 const (
@@ -31,9 +31,9 @@ const (
 )
 
 type MemBlock struct {
-	Address int
-	Size    int
-	Tags    []*Tag
+	address int
+	size    int
+	tags    []*Tag
 }
 
 type Tag struct {
@@ -71,7 +71,7 @@ func NewPLCHandler(core handler.CoreHandler) *PLCHandler {
 	h.SlaveId = 1
 	h.Timeout = 2 * time.Second
 
-	rv := &PLCHandler{ClientHandler: h}
+	rv := &PLCHandler{clientHandler: h}
 	rv.Init()
 	rv.Name = "plchandler"
 	rv.CoreHandler = core
@@ -87,29 +87,29 @@ func makePollingMemBlocks(tagsMemBlocks []MemBlock) []MemBlock {
 	sortedBlocks := tagsMemBlocks
 
 	sort.Slice(sortedBlocks, func(i, j int) bool {
-		return sortedBlocks[i].Address < sortedBlocks[j].Address
+		return sortedBlocks[i].address < sortedBlocks[j].address
 	})
 
-	block := MemBlock{Tags: []*Tag{}}
+	block := MemBlock{tags: []*Tag{}}
 	for _, mb := range sortedBlocks {
-		if block.Size == 0 {
-			block.Address = mb.Address
-			block.Size = mb.Size
-			block.Tags = append(block.Tags, mb.Tags[0])
+		if block.size == 0 {
+			block.address = mb.address
+			block.size = mb.size
+			block.tags = append(block.tags, mb.tags[0])
 			continue
 		}
-		newBlockSize := mb.Address + mb.Size - block.Address
-		breakSize := mb.Address - block.Address - block.Size
+		newBlockSize := mb.address + mb.size - block.address
+		breakSize := mb.address - block.address - block.size
 		if newBlockSize > maxBlockSize || breakSize > maxBreakSize {
 			rv = append(rv, block)
-			block = MemBlock{Address: mb.Address, Size: mb.Size}
-			block.Tags = append(block.Tags, mb.Tags[0])
+			block = MemBlock{address: mb.address, size: mb.size}
+			block.tags = append(block.tags, mb.tags[0])
 			continue
 		}
-		block.Size = newBlockSize
-		block.Tags = append(block.Tags, mb.Tags[0])
+		block.size = newBlockSize
+		block.tags = append(block.tags, mb.tags[0])
 	}
-	if block.Size > 0 {
+	if block.size > 0 {
 		rv = append(rv, block)
 	}
 
@@ -119,7 +119,7 @@ func makePollingMemBlocks(tagsMemBlocks []MemBlock) []MemBlock {
 func (ph *PLCHandler) Start() error {
 	ph.BaseHandler.Start()
 
-	ph.Tags = make(map[string]*Tag)
+	ph.tags = make(map[string]*Tag)
 
 	tags := getTagsConfig()
 	tagsCount := len(tags.Input) + len(tags.Output)
@@ -127,26 +127,26 @@ func (ph *PLCHandler) Start() error {
 	for _, tag := range tags.Input {
 		tag.Size = 1
 		tag.Type = typeInput
-		ph.Tags[tag.Name] = &tag
-		mb := MemBlock{Address: tag.Address, Size: tag.Size, Tags: []*Tag{&tag}}
+		ph.tags[tag.Name] = &tag
+		mb := MemBlock{address: tag.Address, size: tag.Size, tags: []*Tag{&tag}}
 		tagsMemBlocks = append(tagsMemBlocks, mb)
 	}
 	for _, tag := range tags.Output {
 		tag.Size = 1
 		tag.Type = typeOutput
-		ph.Tags[tag.Name] = &tag
-		mb := MemBlock{Address: tag.Address, Size: tag.Size, Tags: []*Tag{&tag}}
+		ph.tags[tag.Name] = &tag
+		mb := MemBlock{address: tag.Address, size: tag.Size, tags: []*Tag{&tag}}
 		tagsMemBlocks = append(tagsMemBlocks, mb)
 	}
-	ph.PollingMemBlocks = makePollingMemBlocks(tagsMemBlocks)
+	ph.pollingMemBlocks = makePollingMemBlocks(tagsMemBlocks)
 
-	err := ph.ClientHandler.Connect()
+	err := ph.clientHandler.Connect()
 	if err != nil {
 		return err
 	}
-	defer ph.ClientHandler.Close()
+	defer ph.clientHandler.Close()
 
-	client := modbus.NewClient(ph.ClientHandler)
+	client := modbus.NewClient(ph.clientHandler)
 	return ph.loop(&client)
 }
 
@@ -158,7 +158,7 @@ func (ph *PLCHandler) loop(client *modbus.Client) error {
 			return ph.Ctx.Err()
 		case command := <-ph.CommandChanIn:
 			//fmt.Printf("have command: %v\n", command)
-			tag, ok := ph.Tags[command.Name]
+			tag, ok := ph.tags[command.Name]
 			if ok {
 				var val uint16 = on
 				if command.Value == "0" {
@@ -170,14 +170,14 @@ func (ph *PLCHandler) loop(client *modbus.Client) error {
 				}
 			}
 		default:
-			for _, mb := range ph.PollingMemBlocks {
-				results, err := (*client).ReadCoils(uint16(mb.Address), uint16(mb.Size))
+			for _, mb := range ph.pollingMemBlocks {
+				results, err := (*client).ReadCoils(uint16(mb.address), uint16(mb.size))
 				if err != nil {
 					fmt.Printf("ERROR: %v\n", err)
 					continue
 				}
-				for _, tag := range mb.Tags {
-					delta := (*tag).Address - mb.Address
+				for _, tag := range mb.tags {
+					delta := tag.Address - mb.address
 					offs := uint(delta / 8)
 					rem := uint(delta % 8)
 					mask := 0x80 >> rem
