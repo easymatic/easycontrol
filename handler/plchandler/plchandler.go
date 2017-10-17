@@ -31,15 +31,15 @@ const (
 )
 
 type MemBlock struct {
-	address int
-	size    int
+	address uint16
+	size    uint16
 	tags    []*Tag
 }
 
 type Tag struct {
 	Name    string `yaml:"name"`
-	Address int    `yaml:"address"`
-	Size    int    `yaml:"-"`
+	Address uint16 `yaml:"address"`
+	Size    uint16 `yaml:"-"`
 	Type    string `yaml:"-"`
 	Value   string `yaml:"-"`
 }
@@ -146,10 +146,10 @@ func (ph *PLCHandler) Start() error {
 	defer ph.clientHandler.Close()
 
 	client := modbus.NewClient(ph.clientHandler)
-	return ph.loop(&client)
+	return ph.loop(client)
 }
 
-func (ph *PLCHandler) loop(client *modbus.Client) error {
+func (ph *PLCHandler) loop(client modbus.Client) error {
 	for {
 		select {
 		case <-ph.Ctx.Done():
@@ -163,25 +163,24 @@ func (ph *PLCHandler) loop(client *modbus.Client) error {
 				if command.Value == "0" {
 					val = off
 				}
-				_, err := (*client).WriteSingleCoil(uint16(tag.Address), val)
-				if err != nil {
+				if _, err := client.WriteSingleCoil(tag.Address, val); err != nil {
 					fmt.Printf("error: %v\n", err)
 				}
 			}
 		default:
 			for _, mb := range ph.pollingMemBlocks {
-				results, err := (*client).ReadCoils(uint16(mb.address), uint16(mb.size))
+				results, err := client.ReadCoils(mb.address, mb.size)
 				if err != nil {
 					fmt.Printf("ERROR: %v\n", err)
 					continue
 				}
 				for _, tag := range mb.tags {
 					delta := tag.Address - mb.address
-					offs := uint(delta / 8)
-					rem := uint(delta % 8)
-					mask := 0x80 >> rem
+					offs := delta / 8
+					rem := delta % 8
+					mask := 0x01 << rem
 					b := int(results[offs]) & mask
-					b >>= (8 - offs)
+					b >>= rem
 					newValue := strconv.Itoa(int(b))
 					value := tag.Value
 					if value != newValue {
