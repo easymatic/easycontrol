@@ -3,6 +3,7 @@ package plchandler
 import (
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strconv"
 	"time"
 
@@ -13,19 +14,34 @@ import (
 
 type PLCHandler struct {
 	handler.BaseHandler
-	// Tags       map[int]*handler.Tag
-	// OutputTags map[int]*handler.Tag
-	Tags          []Tag
-	Values        map[string]string
-	ClientHandler *modbus.ASCIIClientHandler
+	tags             map[string]*Tag
+	pollingMemBlocks []MemBlock
+	clientHandler    *modbus.ASCIIClientHandler
 }
 
-const ON = 65280 // 0xFF00
-const OFF = 0    // 0x0000
+const (
+	on  = 65280 // 0xFF00
+	off = 0     // 0x0000
+
+	typeInput  = "input"
+	typeOutput = "output"
+
+	maxBlockSize = 64
+	maxBreakSize = 8
+)
+
+type MemBlock struct {
+	address uint16
+	size    uint16
+	tags    []*Tag
+}
 
 type Tag struct {
 	Name    string `yaml:"name"`
-	Address int    `yaml:"address"`
+	Address uint16 `yaml:"address"`
+	Size    uint16 `yaml:"-"`
+	Type    string `yaml:"-"`
+	Value   string `yaml:"-"`
 }
 
 type Tags struct {
@@ -45,6 +61,7 @@ func getTagsConfig() Tags {
 	}
 	return tags
 }
+
 func NewPLCHandler(core handler.CoreHandler) *PLCHandler {
 	h := modbus.NewASCIIClientHandler("/dev/ttyPLC")
 	h.BaudRate = 9600
@@ -54,84 +71,124 @@ func NewPLCHandler(core handler.CoreHandler) *PLCHandler {
 	h.SlaveId = 1
 	h.Timeout = 2 * time.Second
 
-	rv := &PLCHandler{ClientHandler: h}
+	rv := &PLCHandler{clientHandler: h}
 	rv.Init()
 	rv.Name = "plchandler"
 	rv.CoreHandler = core
 	return rv
 }
 
+func makePollingMemBlocks(tagsMemBlocks []MemBlock) []MemBlock {
+	if len(tagsMemBlocks) == 0 {
+		return tagsMemBlocks
+	}
+
+	rv := []MemBlock{}
+
+	sort.Slice(tagsMemBlocks, func(i, j int) bool {
+		return tagsMemBlocks[i].address < tagsMemBlocks[j].address
+	})
+
+	block := MemBlock{tags: []*Tag{}}
+	for _, mb := range tagsMemBlocks {
+		if block.size == 0 {
+			block.address = mb.address
+			block.size = mb.size
+			block.tags = append(block.tags, mb.tags[0])
+			continue
+		}
+		newBlockSize := mb.address + mb.size - block.address
+		breakSize := mb.address - block.address - block.size
+		if newBlockSize > maxBlockSize || breakSize > maxBreakSize {
+			rv = append(rv, block)
+			block = MemBlock{address: mb.address, size: mb.size}
+			block.tags = append(block.tags, mb.tags[0])
+			continue
+		}
+		block.size = newBlockSize
+		block.tags = append(block.tags, mb.tags[0])
+	}
+	if block.size > 0 {
+		rv = append(rv, block)
+	}
+
+	return rv
+}
+
 func (ph *PLCHandler) Start() error {
 	ph.BaseHandler.Start()
 
-	ph.Values = make(map[string]string)
+	ph.tags = make(map[string]*Tag)
 
 	tags := getTagsConfig()
+	tagsCount := len(tags.Input) + len(tags.Output)
+	tagsMemBlocks := make([]MemBlock, 0, tagsCount)
 	for _, tag := range tags.Input {
-		ph.Tags = append(ph.Tags, tag)
+		tag.Size = 1
+		tag.Type = typeInput
+		ph.tags[tag.Name] = &tag
+		mb := MemBlock{address: tag.Address, size: tag.Size, tags: []*Tag{&tag}}
+		tagsMemBlocks = append(tagsMemBlocks, mb)
 	}
 	for _, tag := range tags.Output {
-		ph.Tags = append(ph.Tags, tag)
+		tag.Size = 1
+		tag.Type = typeOutput
+		ph.tags[tag.Name] = &tag
+		mb := MemBlock{address: tag.Address, size: tag.Size, tags: []*Tag{&tag}}
+		tagsMemBlocks = append(tagsMemBlocks, mb)
 	}
-	fmt.Printf("%+v\n", ph.Tags)
+	ph.pollingMemBlocks = makePollingMemBlocks(tagsMemBlocks)
 
-	err := ph.ClientHandler.Connect()
+	err := ph.clientHandler.Connect()
 	if err != nil {
 		return err
 	}
-	defer ph.ClientHandler.Close()
-	//
-	client := modbus.NewClient(ph.ClientHandler)
+	defer ph.clientHandler.Close()
+
+	client := modbus.NewClient(ph.clientHandler)
+	return ph.loop(client)
+}
+
+func (ph *PLCHandler) loop(client modbus.Client) error {
 	for {
 		select {
 		case <-ph.Ctx.Done():
 			fmt.Println("Context canceled")
 			return ph.Ctx.Err()
 		case command := <-ph.CommandChanIn:
-			// fmt.Printf("have command: %v\n", command)
-			for _, tag := range ph.Tags {
-				if tag.Name == command.Name {
-					// fmt.Printf("address: %v\n", tag.Address)
-					var val uint16 = ON
-					if command.Value == "0" {
-						val = OFF
-					}
-					_, err = client.WriteSingleCoil(uint16(tag.Address), val)
-					if err != nil {
-						fmt.Printf("error: %v\n", err)
-					}
+			//fmt.Printf("have command: %v\n", command)
+			tag, ok := ph.tags[command.Name]
+			if ok {
+				var val uint16 = on
+				if command.Value == "0" {
+					val = off
+				}
+				if _, err := client.WriteSingleCoil(tag.Address, val); err != nil {
+					fmt.Printf("error: %v\n", err)
 				}
 			}
 		default:
-			for _, tag := range ph.Tags {
-				results, err := client.ReadCoils(uint16(tag.Address), 1)
+			for _, mb := range ph.pollingMemBlocks {
+				results, err := client.ReadCoils(mb.address, mb.size)
 				if err != nil {
 					fmt.Printf("ERROR: %v\n", err)
 					continue
 				}
-				b := results[0] & 1
-				newValue := strconv.Itoa(int(b))
-				value, already := ph.Values[tag.Name]
-				if !already {
-					fmt.Println("create new one")
-					ph.Values[tag.Name] = newValue
-				} else {
+				for _, tag := range mb.tags {
+					delta := tag.Address - mb.address
+					offs := delta / 8
+					rem := delta % 8
+					mask := 0x01 << rem
+					b := int(results[offs]) & mask
+					b >>= rem
+					newValue := strconv.Itoa(int(b))
+					value := tag.Value
 					if value != newValue {
-						ph.Values[tag.Name] = newValue
+						tag.Value = newValue
 						ph.SendEvent(handler.Event{Source: "plchandler", Tag: handler.Tag{Name: tag.Name, Value: newValue}})
 					}
 				}
-
 			}
-			// time.Sleep(time.Second)
-			// var val uint16 = ON
-			// if b != 0 {
-			// val = OFF
-			// }
-			// results, err = client.WriteSingleCoil(1283, val)
-			// if err != nil {
-			// fmt.Printf("ERROR: %v\n", err)
-
 		}
 	}
 }
