@@ -11,11 +11,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const READER_START_ADDRESS = 16
-const READER_BLOCK_SIZE = 2
-const READER_COUNT = 2
+const (
+	readerStartAddress = 16
+	readerBlockSize    = 2
+	readerCount        = 2
+)
 
-type Reader struct {
+type reader struct {
 	EventId  int
 	CardCode int
 }
@@ -24,7 +26,7 @@ type ReaderHandler struct {
 	handler.BaseHandler
 
 	ClientHandler *modbus.RTUClientHandler
-	Readers       [READER_COUNT]Reader
+	Readers       [readerCount]reader
 }
 
 func NewReaderHandler(core handler.CoreHandler) *ReaderHandler {
@@ -36,9 +38,9 @@ func NewReaderHandler(core handler.CoreHandler) *ReaderHandler {
 	h.SlaveId = 1
 	h.Timeout = 5 * time.Second
 
-	readers := [READER_COUNT]Reader{
-		Reader{EventId: -1},
-		Reader{EventId: -1}}
+	readers := [readerCount]reader{
+		reader{EventId: -1},
+		reader{EventId: -1}}
 
 	rv := &ReaderHandler{ClientHandler: h, Readers: readers}
 	rv.Init()
@@ -73,8 +75,8 @@ func (ah *ReaderHandler) Start() error {
 func (ah *ReaderHandler) process(client modbus.Client) {
 
 	results, _ := client.ReadInputRegisters(
-		READER_START_ADDRESS,
-		READER_COUNT*READER_BLOCK_SIZE)
+		readerStartAddress,
+		readerCount*readerBlockSize)
 
 	ah.processReaderData(results)
 
@@ -85,7 +87,7 @@ func (ah *ReaderHandler) processReaderData(data []byte) {
 		return
 	}
 	for idx, reader := range ah.Readers {
-		eventIdPos := 2 * READER_BLOCK_SIZE * idx
+		eventIdPos := 2 * readerBlockSize * idx
 		newEventId := int(data[eventIdPos])
 		curEventId := reader.EventId
 		if curEventId >= 0 && newEventId > 0 {

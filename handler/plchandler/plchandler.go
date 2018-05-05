@@ -1,6 +1,7 @@
 package plchandler
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"sort"
@@ -16,9 +17,10 @@ import (
 
 type PLCHandler struct {
 	handler.BaseHandler
-	tags             map[string]*Tag
-	pollingMemBlocks []MemBlock
-	clientHandler    *modbus.ASCIIClientHandler
+	tags                   map[string]*Tag
+	pollingCoilMemBlocks   []memBlock
+	pollingMemoryMemBlocks []memBlock
+	clientHandler          *modbus.ASCIIClientHandler
 }
 
 const (
@@ -27,13 +29,14 @@ const (
 
 	typeInput  = "input"
 	typeOutput = "output"
+	typeMemory = "memory"
 
 	maxBlockSize = 64
 	maxBreakSize = 8
 	configPath   = "config/tags.yaml"
 )
 
-type MemBlock struct {
+type memBlock struct {
 	address uint16
 	size    uint16
 	tags    []*Tag
@@ -42,14 +45,15 @@ type MemBlock struct {
 type Tag struct {
 	Name    string `yaml:"name"`
 	Address uint16 `yaml:"address"`
-	Size    uint16 `yaml:"-"`
+	Size    uint16 `yaml:"size"`
 	Type    string `yaml:"-"`
 	Value   string `yaml:"-"`
 }
 
 type Config struct {
-	Input  []Tag  `yaml:"input"`
-	Output []Tag  `yaml:"output"`
+	Input  []*Tag `yaml:"input"`
+	Output []*Tag `yaml:"output"`
+	Memory []*Tag `yaml:"memory"`
 	Device string `yaml:"device"`
 }
 
@@ -74,18 +78,18 @@ func NewPLCHandler(core handler.CoreHandler) *PLCHandler {
 	return rv
 }
 
-func makePollingMemBlocks(tagsMemBlocks []MemBlock) []MemBlock {
+func makePollingMemBlocks(tagsMemBlocks []memBlock) []memBlock {
 	if len(tagsMemBlocks) == 0 {
 		return tagsMemBlocks
 	}
 
-	rv := []MemBlock{}
+	rv := []memBlock{}
 
 	sort.Slice(tagsMemBlocks, func(i, j int) bool {
 		return tagsMemBlocks[i].address < tagsMemBlocks[j].address
 	})
 
-	block := MemBlock{tags: []*Tag{}}
+	block := memBlock{tags: []*Tag{}}
 	for _, mb := range tagsMemBlocks {
 		if block.size == 0 {
 			block.address = mb.address
@@ -97,7 +101,7 @@ func makePollingMemBlocks(tagsMemBlocks []MemBlock) []MemBlock {
 		breakSize := mb.address - block.address - block.size
 		if newBlockSize > maxBlockSize || breakSize > maxBreakSize {
 			rv = append(rv, block)
-			block = MemBlock{address: mb.address, size: mb.size}
+			block = memBlock{address: mb.address, size: mb.size}
 			block.tags = append(block.tags, mb.tags[0])
 			continue
 		}
@@ -121,24 +125,42 @@ func (ph *PLCHandler) Start() error {
 		return errors.Wrap(err, "unable to get config")
 	}
 	tagsCount := len(config.Input) + len(config.Output)
-	tagsMemBlocks := make([]MemBlock, 0, tagsCount)
+	tagsMemBlocks := make([]memBlock, 0, tagsCount)
 	for _, tag := range config.Input {
-		t := Tag{Size: 1, Type: typeInput, Address: tag.Address, Name: tag.Name}
-		ph.tags[tag.Name] = &t
-		mb := MemBlock{address: t.Address, size: t.Size, tags: []*Tag{&t}}
+		tag.Size = 1
+		tag.Type = typeInput
+		ph.tags[tag.Name] = tag
+		mb := memBlock{address: tag.Address, size: tag.Size, tags: []*Tag{tag}}
 		tagsMemBlocks = append(tagsMemBlocks, mb)
 	}
 	for _, tag := range config.Output {
-		t := Tag{Size: 1, Type: typeOutput, Address: tag.Address, Name: tag.Name}
-		ph.tags[tag.Name] = &t
-		mb := MemBlock{address: t.Address, size: t.Size, tags: []*Tag{&t}}
+		tag.Type = typeOutput
+		tag.Size = 1
+		ph.tags[tag.Name] = tag
+		mb := memBlock{address: tag.Address, size: tag.Size, tags: []*Tag{tag}}
 		tagsMemBlocks = append(tagsMemBlocks, mb)
 	}
-	ph.pollingMemBlocks = makePollingMemBlocks(tagsMemBlocks)
-	for _, m := range ph.pollingMemBlocks {
+	ph.pollingCoilMemBlocks = makePollingMemBlocks(tagsMemBlocks)
+	for _, m := range ph.pollingCoilMemBlocks {
 		log.Infof("address: %v, size: %v", m.address, m.size)
 		for _, t := range m.tags {
-			log.Infof("%v | ", t)
+			log.Infof("tag: %v/%v", t.Name, t.Address)
+		}
+	}
+	tagsMemBlocks = make([]memBlock, 0, len(config.Output))
+	for _, tag := range config.Memory {
+		tag.Type = typeMemory
+		tag.Size = 1
+		tag := tag
+		ph.tags[tag.Name] = tag
+		mb := memBlock{address: tag.Address, size: tag.Size, tags: []*Tag{tag}}
+		tagsMemBlocks = append(tagsMemBlocks, mb)
+	}
+	ph.pollingMemoryMemBlocks = makePollingMemBlocks(tagsMemBlocks)
+	for _, m := range ph.pollingMemoryMemBlocks {
+		log.Infof("address: %v, size: %v", m.address, m.size)
+		for _, t := range m.tags {
+			log.Infof("tag: %v/%v", t.Name, t.Address)
 		}
 	}
 
@@ -179,14 +201,24 @@ func (ph *PLCHandler) loop(client modbus.Client) error {
 				}
 			}
 		default:
-			for _, mb := range ph.pollingMemBlocks {
-				r, err := client.ReadHoldingRegisters(3597, 1)
+			for _, mb := range ph.pollingMemoryMemBlocks {
+				results, err := client.ReadHoldingRegisters(mb.address, mb.size)
 				if err != nil {
-					log.WithError(err).Errorf("unable to read coil: %v", 3597)
+					log.WithError(err).Errorf("unable to read coils: %v, with size: %v", mb.address, mb.size)
 					continue
 				}
-				log.Infof("len: %d\n", len(r))
-				log.Infof("register: %d, %d\n", r[0], r[1])
+				for _, tag := range mb.tags {
+					delta := tag.Address - mb.address
+					b := binary.BigEndian.Uint16(results[delta*2 : delta*2+2])
+					newValue := strconv.FormatUint(uint64(b), 10)
+					value := tag.Value
+					if value != newValue {
+						tag.Value = newValue
+						ph.SendEvent(handler.Event{Source: "plchandler", Tag: handler.Tag{Name: tag.Name, Value: newValue}})
+					}
+				}
+			}
+			for _, mb := range ph.pollingCoilMemBlocks {
 				results, err := client.ReadCoils(mb.address, mb.size)
 				if err != nil {
 					log.WithError(err).Errorf("unable to read coils: %v, with size: %v", mb.address, mb.size)

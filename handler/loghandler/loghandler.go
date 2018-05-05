@@ -25,7 +25,7 @@ func (hndl *LogHandler) Start() error {
 		select {
 		case e := <-hndl.EventReader.Ch:
 			event := e.(handler.Event)
-			log.Infof("loghander have event: [%s] %s=%s\n", event.Source, event.Tag.Name, event.Tag.Value)
+			log.Infof("loghander have event: [%s] %s=%s", event.Source, event.Tag.Name, event.Tag.Value)
 		case <-hndl.Ctx.Done():
 			log.Infof("Context canceled")
 			return hndl.Ctx.Err()
