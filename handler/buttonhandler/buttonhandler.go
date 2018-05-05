@@ -1,4 +1,4 @@
-package buttonshandler
+package buttonhandler
 
 import (
 	"fmt"
@@ -42,21 +42,21 @@ func getConfig() (*config, error) {
 	return c, nil
 }
 
-type ButtonsHandler struct {
+type ButtonHandler struct {
 	handler.BaseHandler
 	config *config
 	tags   map[string]*handler.Tag
 }
 
-func NewButtonsHandler(core handler.CoreHandler) *ButtonsHandler {
-	rv := &ButtonsHandler{}
+func NewButtonHandler(core handler.CoreHandler) *ButtonHandler {
+	rv := &ButtonHandler{}
 	rv.Init()
-	rv.Name = "buttonshandler"
+	rv.Name = "buttonhandler"
 	rv.CoreHandler = core
 	return rv
 }
 
-func (hndl *ButtonsHandler) Start() error {
+func (hndl *ButtonHandler) Start() error {
 	hndl.BaseHandler.Start()
 	var err error
 	hndl.config, err = getConfig()

@@ -1,0 +1,8 @@
+clicks:
+  - name: Tamb3LongClick
+    event:
+      source: buttonhandler
+      tag:
+        name: Tamb3Click
+        value: 1
+    timeout: 1000

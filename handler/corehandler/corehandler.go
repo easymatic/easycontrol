@@ -11,7 +11,8 @@ import (
 	"github.com/easymatic/easycontrol/handler"
 	"github.com/easymatic/easycontrol/handler/accesshandler"
 	"github.com/easymatic/easycontrol/handler/actionhandler"
-	"github.com/easymatic/easycontrol/handler/buttonshandler"
+	"github.com/easymatic/easycontrol/handler/buttonhandler"
+	"github.com/easymatic/easycontrol/handler/clickhandler"
 	"github.com/easymatic/easycontrol/handler/doorhandler"
 	"github.com/easymatic/easycontrol/handler/dummyhandler"
 	"github.com/easymatic/easycontrol/handler/loghandler"
@@ -78,7 +79,8 @@ func (hndl *CoreHandler) loadHandler() map[string]handler.Handler {
 	log := loghandler.NewLogHandler(hndl)
 	rh := readerhandler.NewReaderHandler(hndl)
 	plc := plchandler.NewPLCHandler(hndl)
-	btn := buttonshandler.NewButtonsHandler(hndl)
+	btn := buttonhandler.NewButtonHandler(hndl)
+	clk := clickhandler.NewClickHandler(hndl)
 
 	handlers := map[string]handler.Handler{
 		dummy.GetName():  dummy,
@@ -89,6 +91,7 @@ func (hndl *CoreHandler) loadHandler() map[string]handler.Handler {
 		door.GetName():   door,
 		access.GetName(): access,
 		btn.GetName():    btn,
+		clk.GetName():    clk,
 	}
 	return handlers
 }

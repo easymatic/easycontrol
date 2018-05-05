@@ -92,6 +92,7 @@ func (hndl *ActionHandler) Start() error {
 							log.Infof("run command set: %v", command.Command)
 							hndl.CoreHandler.RunCommand(command.Command)
 						} else if command.Name == commandDelay {
+							log.Infof("run command delay: %v", command.Params)
 							time.Sleep(time.Second * time.Duration(command.Params.(int)))
 						} else if command.Name == commandInvert {
 							log.Infof("run command invert: %v", command.Command)

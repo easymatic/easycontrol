@@ -1,7 +1,100 @@
 actions:
+  - name: AllOff
+    event:
+      source: clickhandler
+      tag:
+        name: Tamb3LongClick
+        value: 1
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+            value: 1
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: zal
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van4
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van2
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: spal
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: spal2
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyh
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+            value: 1
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyhup
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: ylic
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: gard
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kor
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+            value: 0
+
+
   - name: Van4Switch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Van1Click
         value: 1
@@ -14,7 +107,7 @@ actions:
 
   - name: Van2Switch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Van2Click
         value: 1
@@ -27,7 +120,7 @@ actions:
 
   - name: VanMainSwitchOff1
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Van4Click
         value: 1
@@ -56,7 +149,7 @@ actions:
 
   - name: VanMainSwitchOff2
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Van4Click
         value: 1
@@ -85,7 +178,7 @@ actions:
 
   - name: VanMainSwitchOff3
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Van4Click
         value: 1
@@ -114,7 +207,7 @@ actions:
 
   - name: VanMainSwitchOn
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Van4Click
         value: 1
@@ -137,7 +230,7 @@ actions:
 
   - name: Tamb1Switch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Tamb1Click
         value: 1
@@ -150,7 +243,7 @@ actions:
 
   - name: TambKorOnSwitch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: KorClick
         value: 1
@@ -163,7 +256,7 @@ actions:
 
   - name: Spa2Switch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Spa2Click
         value: 1
@@ -176,7 +269,7 @@ actions:
 
   - name: Spa1Switch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Spa1Click
         value: 1
@@ -189,7 +282,7 @@ actions:
 
   - name: ZalSwitch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: ZalClick
         value: 1
@@ -202,7 +295,7 @@ actions:
 
   - name: GardSwitch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: GardClick
         value: 1
@@ -215,7 +308,7 @@ actions:
 
   - name: Tamb3Switch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Tamb3Click
         value: 1
@@ -228,7 +321,7 @@ actions:
 
   - name: Tamb2Switch
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: Tamb2Click
         value: 1
@@ -241,7 +334,7 @@ actions:
 
   - name: KyhOn
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: KyhClick
         value: 1
@@ -270,7 +363,7 @@ actions:
 
   - name: KyhOff1
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: KyhClick
         value: 1
@@ -299,7 +392,7 @@ actions:
 
   - name: KyhOff2
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: KyhClick
         value: 1
@@ -328,7 +421,7 @@ actions:
 
   - name: KyhOff3
     event:
-      source: buttonshandler
+      source: buttonhandler
       tag:
         name: KyhClick
         value: 1
