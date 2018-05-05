@@ -1,7 +1,6 @@
 package corehandler
 
 import (
-	"fmt"
 	"io/ioutil"
 	"sync"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/easymatic/easycontrol/handler/loghandler"
 	"github.com/easymatic/easycontrol/handler/plchandler"
 	"github.com/easymatic/easycontrol/handler/readerhandler"
+	log "github.com/sirupsen/logrus"
 	"github.com/tjgq/broadcast"
 )
 
@@ -102,7 +102,7 @@ func (hndl *CoreHandler) Start() error {
 				go func(hh handler.Handler) {
 					defer wg.Done()
 					if err := hh.Start(); err != nil {
-						fmt.Printf("Error while running handler: %v\n", err)
+						log.WithError(err).Errorf("Error while running handler: %s", hh.GetName())
 					}
 				}(hh)
 			}
@@ -113,6 +113,5 @@ func (hndl *CoreHandler) Start() error {
 }
 
 func (hndl *CoreHandler) SendEvent(tag handler.Event) {
-	// fmt.Printf("sending event in corehandler%v\n", tag)
 	hndl.broadcaster.Send(tag)
 }

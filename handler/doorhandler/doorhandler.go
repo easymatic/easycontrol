@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/easymatic/easycontrol/handler"
+	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -70,7 +71,7 @@ func (hndl *DoorHandler) Start() error {
 				}
 			}
 		case <-hndl.Ctx.Done():
-			fmt.Println("Context canceled")
+			log.Info("Context canceled")
 			return hndl.Ctx.Err()
 		}
 	}

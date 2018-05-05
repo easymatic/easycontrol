@@ -9,6 +9,8 @@ import (
 
 	"github.com/easymatic/easycontrol/handler"
 	"github.com/goburrow/modbus"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -28,6 +30,7 @@ const (
 
 	maxBlockSize = 64
 	maxBreakSize = 8
+	configPath   = "config/tags.yaml"
 )
 
 type MemBlock struct {
@@ -44,34 +47,27 @@ type Tag struct {
 	Value   string `yaml:"-"`
 }
 
-type Tags struct {
-	Input  []Tag `yaml:"input"`
-	Output []Tag `yaml:"output"`
+type Config struct {
+	Input  []Tag  `yaml:"input"`
+	Output []Tag  `yaml:"output"`
+	Device string `yaml:"device"`
 }
 
-func getTagsConfig() Tags {
-	var tags Tags
-	yamlFile, err := ioutil.ReadFile("config/tags.yaml")
+func getConfig() (*Config, error) {
+	config := &Config{}
+	yamlFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		panic(err)
+		return nil, errors.Wrap(err, fmt.Sprintf("unable to open config: %s", configPath))
 	}
-	err = yaml.Unmarshal(yamlFile, &tags)
+	err = yaml.Unmarshal(yamlFile, config)
 	if err != nil {
-		panic(err)
+		return nil, errors.Wrap(err, fmt.Sprintf("unable to parse config: %s", configPath))
 	}
-	return tags
+	return config, nil
 }
 
 func NewPLCHandler(core handler.CoreHandler) *PLCHandler {
-	h := modbus.NewASCIIClientHandler("/dev/ttyPLC")
-	h.BaudRate = 9600
-	h.DataBits = 7
-	h.Parity = "E"
-	h.StopBits = 2
-	h.SlaveId = 1
-	h.Timeout = 2 * time.Second
-
-	rv := &PLCHandler{clientHandler: h}
+	rv := &PLCHandler{}
 	rv.Init()
 	rv.Name = "plchandler"
 	rv.CoreHandler = core
@@ -120,28 +116,44 @@ func (ph *PLCHandler) Start() error {
 
 	ph.tags = make(map[string]*Tag)
 
-	tags := getTagsConfig()
-	tagsCount := len(tags.Input) + len(tags.Output)
+	config, err := getConfig()
+	if err != nil {
+		return errors.Wrap(err, "unable to get config")
+	}
+	tagsCount := len(config.Input) + len(config.Output)
 	tagsMemBlocks := make([]MemBlock, 0, tagsCount)
-	for _, tag := range tags.Input {
-		tag.Size = 1
-		tag.Type = typeInput
-		ph.tags[tag.Name] = &tag
-		mb := MemBlock{address: tag.Address, size: tag.Size, tags: []*Tag{&tag}}
+	for _, tag := range config.Input {
+		t := Tag{Size: 1, Type: typeInput, Address: tag.Address, Name: tag.Name}
+		ph.tags[tag.Name] = &t
+		mb := MemBlock{address: t.Address, size: t.Size, tags: []*Tag{&t}}
 		tagsMemBlocks = append(tagsMemBlocks, mb)
 	}
-	for _, tag := range tags.Output {
-		tag.Size = 1
-		tag.Type = typeOutput
-		ph.tags[tag.Name] = &tag
-		mb := MemBlock{address: tag.Address, size: tag.Size, tags: []*Tag{&tag}}
+	for _, tag := range config.Output {
+		t := Tag{Size: 1, Type: typeOutput, Address: tag.Address, Name: tag.Name}
+		ph.tags[tag.Name] = &t
+		mb := MemBlock{address: t.Address, size: t.Size, tags: []*Tag{&t}}
 		tagsMemBlocks = append(tagsMemBlocks, mb)
 	}
 	ph.pollingMemBlocks = makePollingMemBlocks(tagsMemBlocks)
+	for _, m := range ph.pollingMemBlocks {
+		log.Infof("address: %v, size: %v", m.address, m.size)
+		for _, t := range m.tags {
+			log.Infof("%v | ", t)
+		}
+	}
 
-	err := ph.clientHandler.Connect()
+	h := modbus.NewASCIIClientHandler(config.Device)
+	h.BaudRate = 9600
+	h.DataBits = 7
+	h.Parity = "E"
+	h.StopBits = 2
+	h.SlaveId = 1
+	h.Timeout = 2 * time.Second
+
+	ph.clientHandler = h
+	err = ph.clientHandler.Connect()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to open serial device")
 	}
 	defer ph.clientHandler.Close()
 
@@ -153,10 +165,9 @@ func (ph *PLCHandler) loop(client modbus.Client) error {
 	for {
 		select {
 		case <-ph.Ctx.Done():
-			fmt.Println("Context canceled")
+			log.Info("Context canceled")
 			return ph.Ctx.Err()
 		case command := <-ph.CommandChanIn:
-			//fmt.Printf("have command: %v\n", command)
 			tag, ok := ph.tags[command.Name]
 			if ok {
 				var val uint16 = on
@@ -164,14 +175,21 @@ func (ph *PLCHandler) loop(client modbus.Client) error {
 					val = off
 				}
 				if _, err := client.WriteSingleCoil(tag.Address, val); err != nil {
-					fmt.Printf("error: %v\n", err)
+					log.WithError(err).Errorf("unable to write coil to addr %v: %v", tag.Address, val)
 				}
 			}
 		default:
 			for _, mb := range ph.pollingMemBlocks {
+				r, err := client.ReadHoldingRegisters(3597, 1)
+				if err != nil {
+					log.WithError(err).Errorf("unable to read coil: %v", 3597)
+					continue
+				}
+				log.Infof("len: %d\n", len(r))
+				log.Infof("register: %d, %d\n", r[0], r[1])
 				results, err := client.ReadCoils(mb.address, mb.size)
 				if err != nil {
-					fmt.Printf("ERROR: %v\n", err)
+					log.WithError(err).Errorf("unable to read coils: %v, with size: %v", mb.address, mb.size)
 					continue
 				}
 				for _, tag := range mb.tags {

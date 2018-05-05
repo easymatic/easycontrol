@@ -2,8 +2,8 @@ package handler
 
 import (
 	"context"
-	"fmt"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/tjgq/broadcast"
 )
 
@@ -50,7 +50,7 @@ func (hndl *BaseHandler) Init() {
 }
 
 func (hndl *BaseHandler) Start() error {
-	fmt.Printf("starting %v handler \n", hndl.Name)
+	log.Infof("starting %s handler", hndl.Name)
 	return nil
 }
 
@@ -65,16 +65,13 @@ func (hndl *BaseHandler) GetName() string {
 func (hndl *BaseHandler) Stop() {
 	hndl.cancel()
 	hndl.EventReader.Close()
-	fmt.Println("stopping dummy handler")
 }
 
 func (hndl *BaseHandler) SetTag(tag Tag) {
-	// fmt.Printf("setting tag %v\n", command)
 	hndl.CommandChanIn <- tag
 }
 
 func (hndl *BaseHandler) SendEvent(tag Event) {
-	// fmt.Printf("sending event %v\n", tag)
 	hndl.CoreHandler.SendEvent(tag)
 }
 

@@ -1,11 +1,11 @@
 package accesshandler
 
 import (
-	"fmt"
 	"io/ioutil"
 	"sort"
 
 	"github.com/easymatic/easycontrol/handler"
+	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -41,7 +41,7 @@ func NewAccessHandler(core handler.CoreHandler) *AccessHandler {
 	rv.Name = "accesshandler"
 	rv.CoreHandler = core
 	rv.config = getConfig()
-	fmt.Printf("access: %v", rv.config)
+	log.Infof("access: %v", rv.config)
 	return rv
 }
 
@@ -72,7 +72,7 @@ func (hndl *AccessHandler) Start() error {
 			}
 
 		case <-hndl.Ctx.Done():
-			fmt.Println("Context canceled")
+			log.Info("Context canceled")
 			return hndl.Ctx.Err()
 		}
 	}

@@ -2,12 +2,13 @@ package readerhandler
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
 	"github.com/easymatic/easycontrol/handler"
 	"github.com/goburrow/modbus"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const READER_START_ADDRESS = 16
@@ -51,7 +52,7 @@ func (ah *ReaderHandler) Start() error {
 
 	err := ah.ClientHandler.Connect()
 	if err != nil {
-		log.Fatal(err)
+		return errors.Wrap(err, "unable to connect")
 	}
 
 	defer ah.ClientHandler.Close()
@@ -60,7 +61,7 @@ func (ah *ReaderHandler) Start() error {
 	for {
 		select {
 		case <-ah.Ctx.Done():
-			fmt.Println("Context canceled")
+			log.Info("Context canceled")
 			return ah.Ctx.Err()
 
 		default:

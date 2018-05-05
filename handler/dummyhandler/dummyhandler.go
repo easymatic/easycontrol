@@ -1,10 +1,10 @@
 package dummyhandler
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/easymatic/easycontrol/handler"
+	log "github.com/sirupsen/logrus"
 )
 
 type DummyHandler struct {
@@ -32,7 +32,7 @@ func (hndl *DummyHandler) Start() error {
 					Value: "10636976"}}
 			hndl.SendEvent(ev)
 		case <-hndl.Ctx.Done():
-			fmt.Println("Context canceled")
+			log.Info("Context canceled")
 			return hndl.Ctx.Err()
 		}
 	}

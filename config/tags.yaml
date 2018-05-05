@@ -1,3 +1,4 @@
+device: "/dev/plc"
 output:
   - name: Y0
     address: 1281

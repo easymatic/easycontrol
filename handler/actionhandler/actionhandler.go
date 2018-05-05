@@ -1,10 +1,10 @@
 package actionhandler
 
 import (
-	"fmt"
 	"io/ioutil"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/easymatic/easycontrol/handler"
@@ -74,7 +74,7 @@ func (hndl *ActionHandler) Start() error {
 				}
 			}
 		case <-hndl.Ctx.Done():
-			fmt.Println("Context canceled")
+			log.Info("Context canceled")
 			return hndl.Ctx.Err()
 		}
 	}
