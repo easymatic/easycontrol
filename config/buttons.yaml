@@ -1,0 +1,61 @@
+buttons:
+  - name: Spa2Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcSpa2
+  - name: Spa1Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcSpa1
+  - name: ZalClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcZal
+  - name: Van4Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcVan4
+  - name: GardClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcGard
+  - name: KorClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcKor
+  - name: Van1Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcVan1
+  - name: Van2Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcVan2
+  - name: KyhClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcKyh
+  - name: Tamb3Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcTamb3
+  - name: Tamb2Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcTamb2
+  - name: Tamb1Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcTamb1

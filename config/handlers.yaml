@@ -13,3 +13,5 @@ handlers:
     run: no
   - name: accesshandler
     run: no
+  - name: buttonshandler
+    run: yes
