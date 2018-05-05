@@ -12,15 +12,15 @@ type Handler interface {
 	Start() error
 	Stop()
 	SetTag(tag Tag)
-	GetTag(key string) string
+	GetTag(key string) (*Tag, error)
 	GetTags() []Tag
 }
 
 type CoreHandler interface {
-	Handler
 	SendEvent(tag Event)
 	GetEventReader() *broadcast.Listener
 	RunCommand(command Command)
+	GetTag(source, tag string) (*Tag, error)
 }
 
 type Event struct {

@@ -34,6 +34,8 @@ const (
 	maxBlockSize = 64
 	maxBreakSize = 8
 	configPath   = "config/tags.yaml"
+
+	pollingTag = 2057
 )
 
 type memBlock struct {
@@ -113,6 +115,14 @@ func makePollingMemBlocks(tagsMemBlocks []memBlock) []memBlock {
 	}
 
 	return rv
+}
+
+func (ph *PLCHandler) GetTag(tag string) (*handler.Tag, error) {
+	t, ok := ph.tags[tag]
+	if !ok {
+		return nil, errors.Errorf("tag %s not found in handler %s", tag, ph.Name)
+	}
+	return &handler.Tag{Name: t.Name, Value: t.Value}, nil
 }
 
 func (ph *PLCHandler) Start() error {
@@ -201,6 +211,10 @@ func (ph *PLCHandler) loop(client modbus.Client) error {
 				}
 			}
 		default:
+			if _, err := client.WriteSingleCoil(pollingTag, on); err != nil {
+				log.WithError(err).Error("unable to write polling coil")
+
+			}
 			for _, mb := range ph.pollingMemoryMemBlocks {
 				results, err := client.ReadHoldingRegisters(mb.address, mb.size)
 				if err != nil {

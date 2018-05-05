@@ -26,6 +26,12 @@ output:
     address: 1300
   - name: spalphil
     address: 1306
+  - name: kyhvityagka
+    address: 1296
+  - name: vanrozetka
+    address: 1312
+  - name: kyhup
+    address: 1313
 input:
 memory:
   - name: vkcSpa2

@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"sync"
 
+	"upspin.io/errors"
+
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/easymatic/easycontrol/handler"
@@ -113,6 +115,14 @@ func (hndl *CoreHandler) Start() error {
 	}
 	wg.Wait()
 	return nil
+}
+
+func (hndl *CoreHandler) GetTag(source, tag string) (*handler.Tag, error) {
+	handler, ok := hndl.handlers[source]
+	if !ok {
+		return nil, errors.Errorf("unable to get handler: %s", source)
+	}
+	return handler.GetTag(tag)
 }
 
 func (hndl *CoreHandler) SendEvent(tag handler.Event) {

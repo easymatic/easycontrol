@@ -1,48 +1,161 @@
 actions:
-  - name: turnOffY3
+  - name: Van4Switch
     event:
-      source: plchandler
+      source: buttonshandler
       tag:
-        name: GREEN
-        value: 0
-    commands:
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: Y3
-            value: 0
-  - name: turnOnY3
-    event:
-      source: plchandler
-      tag:
-        name: GREEN
+        name: Van1Click
         value: 1
     commands:
-      - name: set
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: Y3
-            value: 1
-  - name: cardreader
+            name: van4
+
+  - name: Van2Switch
     event:
-      source: readerhandler
+      source: buttonshandler
       tag:
-        name: Reader0
-        value: 10636976
+        name: Van2Click
+        value: 1
     commands:
-      - name: set
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: Y3
-            value: 1
-      - name: delay
-        params: 5
-      - name: set
+            name: van2
+
+  - name: VanOnSwitch
+    event:
+      source: buttonshandler
+      tag:
+        name: Van4Click
+        value: 1
+    commands:
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: Y3
-            value: 0
+            name: van4
+
+  - name: Tamb1Switch
+    event:
+      source: buttonshandler
+      tag:
+        name: Tamb1Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: kor
+
+  - name: TambKorOnSwitch
+    event:
+      source: buttonshandler
+      tag:
+        name: KorClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: kor
+
+  - name: Spa2Switch
+    event:
+      source: buttonshandler
+      tag:
+        name: Spa2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: spal
+
+  - name: Spa1Switch
+    event:
+      source: buttonshandler
+      tag:
+        name: Spa1Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: spal2
+
+  - name: ZalSwitch
+    event:
+      source: buttonshandler
+      tag:
+        name: ZalClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: zal
+
+  - name: GardSwitch
+    event:
+      source: buttonshandler
+      tag:
+        name: GardClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: gard
+
+  - name: Tamb3Switch
+    event:
+      source: buttonshandler
+      tag:
+        name: Tamb3Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+
+  - name: Tamb2Switch
+    event:
+      source: buttonshandler
+      tag:
+        name: Tamb2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: ylic
+
+  - name: KyhSwitch
+    event:
+      source: buttonshandler
+      tag:
+        name: KyhClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: kyh
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: kyhup
