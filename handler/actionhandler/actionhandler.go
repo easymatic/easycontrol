@@ -21,9 +21,10 @@ const (
 
 type config struct {
 	Actions []struct {
-		Name     string        `yaml:"name"`
-		Event    handler.Event `yaml:"event"`
-		Commands []struct {
+		Name       string          `yaml:"name"`
+		Event      handler.Event   `yaml:"event"`
+		Conditions []handler.Event `yaml:"conditions"`
+		Commands   []struct {
 			Name    string          `yaml:"name"`
 			Command handler.Command `yaml:"command"`
 			Params  interface{}     `yaml:"params"`
@@ -57,6 +58,20 @@ func NewActionHandler(core handler.CoreHandler) *ActionHandler {
 	return rv
 }
 
+func (hndl *ActionHandler) checkConditions(conditions []handler.Event) bool {
+	for _, c := range conditions {
+		t, err := hndl.CoreHandler.GetTag(c.Source, c.Tag.Name)
+		if err != nil {
+			log.WithError(err).Error("unable to get current tag value: %v", c)
+			continue
+		}
+		if t.Value != c.Tag.Value {
+			return false
+		}
+	}
+	return true
+}
+
 func (hndl *ActionHandler) Start() error {
 	hndl.BaseHandler.Start()
 	var err error
@@ -71,7 +86,7 @@ func (hndl *ActionHandler) Start() error {
 		case e := <-hndl.EventReader.Ch:
 			event := e.(handler.Event)
 			for _, action := range hndl.config.Actions {
-				if action.Event == event {
+				if action.Event == event && hndl.checkConditions(action.Conditions) {
 					for _, command := range action.Commands {
 						if command.Name == commandSet {
 							log.Infof("run command set: %v", command.Command)
