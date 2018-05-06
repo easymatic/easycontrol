@@ -79,7 +79,7 @@ func (hndl *ClickHandler) Start() error {
 		case e := <-hndl.EventReader.Ch:
 			event := e.(handler.Event)
 			for _, click := range hndl.config.Clicks {
-				if click.Event == event {
+				if click.Event.Source == event.Source && click.Event.Tag.Name == event.Tag.Name {
 					if t, ok := hndl.tags[event.Tag.Name]; ok {
 						t()
 					}

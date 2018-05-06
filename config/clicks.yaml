@@ -6,3 +6,11 @@ clicks:
         name: Tamb3Click
         value: 1
     timeout: 1000
+
+  - name: KyhLongClick
+    event:
+      source: buttonhandler
+      tag:
+        name: KyhClick
+        value: 1
+    timeout: 500
