@@ -18,6 +18,7 @@ import (
 	"github.com/easymatic/easycontrol/handler/loghandler"
 	"github.com/easymatic/easycontrol/handler/plchandler"
 	"github.com/easymatic/easycontrol/handler/readerhandler"
+	"github.com/easymatic/easycontrol/handler/telegramhandler"
 	log "github.com/sirupsen/logrus"
 	"github.com/tjgq/broadcast"
 )
@@ -81,6 +82,7 @@ func (hndl *CoreHandler) loadHandler() map[string]handler.Handler {
 	plc := plchandler.NewPLCHandler(hndl)
 	btn := buttonhandler.NewButtonHandler(hndl)
 	clk := clickhandler.NewClickHandler(hndl)
+	tlg := telegramhandler.NewTelegramHandler(hndl)
 
 	handlers := map[string]handler.Handler{
 		dummy.GetName():  dummy,
@@ -92,6 +94,7 @@ func (hndl *CoreHandler) loadHandler() map[string]handler.Handler {
 		access.GetName(): access,
 		btn.GetName():    btn,
 		clk.GetName():    clk,
+		tlg.GetName():    tlg,
 	}
 	return handlers
 }

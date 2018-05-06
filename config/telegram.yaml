@@ -1,0 +1,39 @@
+proxy:
+  address: proxy.aborilov.ru:7777
+  username: sockduser
+  password: aborilov
+token: 
+tags:
+  - source: plchandler
+    tag:
+      name: kyh
+  - source: plchandler
+    tag:
+      name: kyhup
+  - source: plchandler
+    tag:
+      name: zal
+  - source: plchandler
+    tag:
+      name: van4
+  - source: plchandler
+    tag:
+      name: van2
+  - source: plchandler
+    tag:
+      name: spal
+  - source: plchandler
+    tag:
+      name: spal2
+  - source: plchandler
+    tag:
+      name: tamb
+  - source: plchandler
+    tag:
+      name: ylic
+  - source: plchandler
+    tag:
+      name: gard
+  - source: plchandler
+    tag:
+      name: kor

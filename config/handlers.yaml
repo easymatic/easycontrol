@@ -17,3 +17,5 @@ handlers:
     run: yes
   - name: clickhandler
     run: yes
+  - name: telegramhandler
+    run: yes
