@@ -332,6 +332,29 @@ actions:
           tag:
             name: ylic
 
+  - name: KyhTableOn
+    event:
+      source: clickhandler
+      tag:
+        name: KyhLongClick
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: kyhup
+          value: 0
+      - source: plchandler
+        tag:
+          name: kyh
+          value: 0
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyh
+            value: 1
+
   - name: KyhAllOn
     event:
       source: clickhandler
