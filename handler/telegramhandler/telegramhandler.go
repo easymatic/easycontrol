@@ -2,10 +2,12 @@ package telegramhandler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -22,6 +24,8 @@ const (
 	configPath = "config/telegram.yaml"
 )
 
+var users = []string{"aborilov", "agniya9"}
+
 type tag struct {
 	Name  string        `yaml:"name"`
 	Event handler.Event `yaml:"event"`
@@ -35,6 +39,15 @@ type config struct {
 	} `yaml:"proxy"`
 	Token string           `yaml:"token"`
 	Tags  []*handler.Event `yaml:"tags"`
+}
+
+func checkAccess(user string) bool {
+	for _, u := range users {
+		if u == user {
+			return true
+		}
+	}
+	return false
 }
 
 func getConfig() (*config, error) {
@@ -62,6 +75,43 @@ func NewTelegramHandler(core handler.CoreHandler) *TelegramHandler {
 	rv.Name = "telegramhandler"
 	rv.CoreHandler = core
 	return rv
+}
+
+func (hndl *TelegramHandler) getInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
+	tags := make([]handler.Event, len(hndl.config.Tags))
+	for i, tag := range hndl.config.Tags {
+		t, err := hndl.CoreHandler.GetTag(tag.Source, tag.Tag.Name)
+		if err != nil {
+			log.WithError(err).Error("unable to get current tag value: %v", tag)
+			continue
+		}
+		tags[i] = handler.Event{Source: tag.Source, Tag: handler.Tag{Name: t.Name, Value: t.Value}}
+	}
+	buttons := make([][]tgbotapi.InlineKeyboardButton, len(tags)+1)
+	for i, tag := range tags {
+		state := "on"
+		if tag.Tag.Value == "0" {
+			tag.Tag.Value = "1"
+			state = "off"
+		} else {
+			tag.Tag.Value = "0"
+		}
+		cmd := handler.Command{Destination: tag.Source, Tag: tag.Tag}
+		data, err := json.Marshal(cmd)
+		if err != nil {
+			log.WithError(err).Error("unable to marshal json: %v", cmd)
+			continue
+		}
+		status := fmt.Sprintf("%s: %s", tag.Tag.Name, state)
+		btn := tgbotapi.NewInlineKeyboardButtonData(status, string(data))
+		row := tgbotapi.NewInlineKeyboardRow(btn)
+		buttons[i] = row
+	}
+	btn := tgbotapi.NewInlineKeyboardButtonData("refresh", "refresh")
+	row := tgbotapi.NewInlineKeyboardRow(btn)
+	buttons[len(hndl.config.Tags)] = row
+	mrk := tgbotapi.NewInlineKeyboardMarkup(buttons...)
+	return mrk
 }
 
 func (hndl *TelegramHandler) Start() error {
@@ -105,45 +155,112 @@ func (hndl *TelegramHandler) Start() error {
 	for {
 		select {
 		case update := <-updates:
-			if update.Message == nil {
-				continue
-			}
-
-			log.Infof("[%s] %s", update.Message.From.UserName, update.Message.Text)
-			if cmd := update.Message.CommandWithAt(); cmd != "" {
-				log.Infof("command: %s", cmd)
-				if cmd == "showtags" {
-					tags := make([]string, len(hndl.config.Tags))
-					for _, tag := range hndl.config.Tags {
-						t, err := hndl.CoreHandler.GetTag(tag.Source, tag.Tag.Name)
-						if err != nil {
-							log.WithError(err).Error("unable to get current tag value: %v", tag)
-							continue
+			go func() {
+				log.Infof("------------------start processing-------------------------------")
+				if update.CallbackQuery != nil {
+					if update.CallbackQuery.Data == "refresh" {
+						log.Info("get new keyboard")
+						mrk := hndl.getInlineKeyboard()
+						log.Info("have new keyboard")
+						edit := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, mrk)
+						log.Info("have edit msg")
+						if _, err := bot.Send(edit); err != nil {
+							log.WithError(err).Error("unable to send refresh update")
 						}
-						tags = append(tags, fmt.Sprintf("%s: %s", t.Name, t.Value))
+						log.Info("msg sent")
+						config := tgbotapi.CallbackConfig{}
+						config.CallbackQueryID = update.CallbackQuery.ID
+						config.Text = "Done"
+						if _, err := bot.AnswerCallbackQuery(config); err != nil {
+							log.WithError(err).Error("unable to send done")
+						}
+						log.Infof("------------------end processing-------------------------------")
+						return
 					}
-					txt := strings.Join(tags, "\n")
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, txt)
-					bot.Send(msg)
-				} else if cmd == "settag" {
-					args := update.Message.CommandArguments()
-					if args == "" {
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "use param - tagname=value")
-						bot.Send(msg)
-						continue
+					if !checkAccess(update.CallbackQuery.From.UserName) {
+						config := tgbotapi.CallbackConfig{}
+						config.CallbackQueryID = update.CallbackQuery.ID
+						config.Text = "access denied"
+						if _, err := bot.AnswerCallbackQuery(config); err != nil {
+							log.WithError(err).Error("unable to send access denied")
+						}
+						log.Infof("------------------end processing-------------------------------")
+						return
 					}
-					argList := strings.Split(args, "=")
-					if len(argList) != 2 {
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "use param - tagname=value")
-						bot.Send(msg)
-						continue
+					cmd := &handler.Command{}
+					if err := json.Unmarshal([]byte(update.CallbackQuery.Data), cmd); err != nil {
+						log.WithError(err).Error("unable unmarshal json: %s", update.CallbackQuery.Data)
 					}
-					tag := handler.Tag{Name: argList[0], Value: argList[1]}
-					cmd := handler.Command{Destination: "plchandler", Tag: tag}
-					hndl.CoreHandler.RunCommand(cmd)
-
+					hndl.CoreHandler.RunCommand(*cmd)
+					config := tgbotapi.CallbackConfig{}
+					config.CallbackQueryID = update.CallbackQuery.ID
+					config.Text = "Done"
+					time.Sleep(time.Duration(500) * time.Millisecond)
+					mrk := hndl.getInlineKeyboard()
+					edit := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, mrk)
+					if _, err := bot.Send(edit); err != nil {
+						log.WithError(err).Error("unable to send keyboard update")
+					}
+					if _, err := bot.AnswerCallbackQuery(config); err != nil {
+						log.WithError(err).Error("unable to send done")
+					}
+					log.Infof("------------------end processing-------------------------------")
+					return
 				}
-			}
+				if update.Message == nil {
+					log.Infof("------------------end processing-------------------------------")
+					return
+				}
+				log.Infof("[%s] %s", update.Message.From.UserName, update.Message.Text)
+				if cmd := update.Message.CommandWithAt(); cmd != "" {
+					log.Infof("command: %s", cmd)
+					switch cmd {
+					case "start":
+						btn := tgbotapi.NewKeyboardButton("/show")
+						kb := tgbotapi.NewReplyKeyboard([]tgbotapi.KeyboardButton{btn})
+						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "starting...")
+						msg.ReplyMarkup = kb
+						if _, err := bot.Send(msg); err != nil {
+							log.WithError(err).Error("unable to send starting")
+						}
+					case "show":
+						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "tags:")
+						mrk := hndl.getInlineKeyboard()
+						msg.ReplyMarkup = mrk
+						_, err := bot.Send(msg)
+						if err != nil {
+							log.WithError(err).Error("unable to send tags with keyboard")
+							log.Infof("------------------end processing-------------------------------")
+							return
+						}
+					case "settag":
+						if !checkAccess(update.Message.From.UserName) {
+							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "access denied")
+							bot.Send(msg)
+							log.Infof("------------------end processing-------------------------------")
+							return
+						}
+						args := update.Message.CommandArguments()
+						if args == "" {
+							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "use param - tagname=value")
+							bot.Send(msg)
+							log.Infof("------------------end processing-------------------------------")
+							return
+						}
+						argList := strings.Split(args, "=")
+						if len(argList) != 2 {
+							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "use param - tagname=value")
+							bot.Send(msg)
+							log.Infof("------------------end processing-------------------------------")
+							return
+						}
+						tag := handler.Tag{Name: argList[0], Value: argList[1]}
+						cmd := handler.Command{Destination: "plchandler", Tag: tag}
+						hndl.CoreHandler.RunCommand(cmd)
+					}
+				}
+				log.Infof("------------------end processing-------------------------------")
+			}()
 		case <-hndl.Ctx.Done():
 			log.Info("Context canceled")
 			return hndl.Ctx.Err()

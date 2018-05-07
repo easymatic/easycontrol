@@ -1,10 +1,9 @@
 package corehandler
 
 import (
+	"fmt"
 	"io/ioutil"
 	"sync"
-
-	"upspin.io/errors"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -126,7 +125,7 @@ func (hndl *CoreHandler) Start() error {
 func (hndl *CoreHandler) GetTag(source, tag string) (*handler.Tag, error) {
 	handler, ok := hndl.handlers[source]
 	if !ok {
-		return nil, errors.Errorf("unable to get handler: %s", source)
+		return nil, fmt.Errorf("unable to get handler: %s", source)
 	}
 	return handler.GetTag(tag)
 }

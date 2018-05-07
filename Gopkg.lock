@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/go-telegram-bot-api/telegram-bot-api"
+  packages = ["."]
+  revision = "0e0af0c480ea98e982d5f4d45fb39577c6ab1e3e"
+  version = "v4.6.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/goburrow/modbus"
   packages = ["."]
@@ -25,6 +31,12 @@
   version = "v1.0.5"
 
 [[projects]]
+  name = "github.com/technoweenie/multipartstreamer"
+  packages = ["."]
+  revision = "a90a01d73ae432e2611d178c18367fbaa13e0154"
+  version = "v1.0.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/tjgq/broadcast"
   packages = ["."]
@@ -35,6 +47,15 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   revision = "4ec37c66abab2c7e02ae775328b2ff001c3f025a"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/net"
+  packages = [
+    "internal/socks",
+    "proxy"
+  ]
+  revision = "640f4622ab692b87c2f3a94265e6f579fe38263d"
 
 [[projects]]
   branch = "master"
@@ -53,6 +74,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bcb2c09fbd7577e56258b8e636dd6f026f2523f9a1abe3c3b4cb69842d2ac2f7"
+  inputs-digest = "fcbab9e8970315e7f778e6b9e98582bca5ab27385ab7fe100b89b1f699cc9c2d"
   solver-name = "gps-cdcl"
   solver-version = 1
