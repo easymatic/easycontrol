@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/go-telegram-bot-api/telegram-bot-api"
-  packages = ["."]
-  revision = "0e0af0c480ea98e982d5f4d45fb39577c6ab1e3e"
-  version = "v4.6.2"
-
-[[projects]]
   branch = "master"
   name = "github.com/goburrow/modbus"
   packages = ["."]
@@ -67,6 +61,12 @@
   revision = "6f686a352de66814cdd080d970febae7767857a3"
 
 [[projects]]
+  name = "gopkg.in/telegram-bot-api.v4"
+  packages = ["."]
+  revision = "0e0af0c480ea98e982d5f4d45fb39577c6ab1e3e"
+  version = "v4.6.2"
+
+[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
@@ -74,6 +74,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fcbab9e8970315e7f778e6b9e98582bca5ab27385ab7fe100b89b1f699cc9c2d"
+  inputs-digest = "c4a22f805e86d50ce9b43e7ad3445f8c4b8532a91da7a4a91b5ce68f0076d9ca"
   solver-name = "gps-cdcl"
   solver-version = 1

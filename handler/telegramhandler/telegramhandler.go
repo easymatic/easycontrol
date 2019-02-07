@@ -13,7 +13,8 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"gopkg.in/telegram-bot-api.v4"
+
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 
@@ -145,10 +146,10 @@ func (hndl *TelegramHandler) Start() error {
 	}
 	bot.Debug = true
 
-	log.Infof("Authorized on account %s", bot.Self.UserName)
+	log.Infof("new version Authorized on account %s", bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+	u.Timeout = 5
 
 	updates, err := bot.GetUpdatesChan(u)
 
@@ -156,7 +157,7 @@ func (hndl *TelegramHandler) Start() error {
 		select {
 		case update := <-updates:
 			go func() {
-				log.Infof("------------------start processing-------------------------------")
+				log.Infof("------------------start!!! processing-------------------------------")
 				if update.CallbackQuery != nil {
 					if update.CallbackQuery.Data == "refresh" {
 						log.Info("get new keyboard")
