@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"sort"
 	"strconv"
 	"time"
@@ -194,6 +195,8 @@ func (ph *PLCHandler) Start() error {
 }
 
 func (ph *PLCHandler) loop(client modbus.Client) error {
+	var avg, count int
+	// start := time.Now()
 	for {
 		select {
 		case <-ph.Ctx.Done():
@@ -211,9 +214,21 @@ func (ph *PLCHandler) loop(client modbus.Client) error {
 				}
 			}
 		default:
+			// log.Error(time.Now().Sub(start))
+			// start = time.Now()
+			now := time.Now().Nanosecond()
+			count++
+			if avg > 0 {
+				avg = int(math.Abs(float64(avg-now)) / 2)
+			} else {
+				avg = now
+			}
+			if count > 1000 {
+				count = 0
+				log.Errorf("average polling time is: %s", time.Nanosecond*time.Duration(avg))
+			}
 			if _, err := client.WriteSingleCoil(pollingTag, on); err != nil {
 				log.WithError(err).Error("unable to write polling coil")
-
 			}
 			for _, mb := range ph.pollingMemoryMemBlocks {
 				results, err := client.ReadHoldingRegisters(mb.address, mb.size)

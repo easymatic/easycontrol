@@ -98,7 +98,7 @@ func (hndl *ActionHandler) Start() error {
 							log.Infof("run command invert: %v", command.Command)
 							t, err := hndl.CoreHandler.GetTag(command.Command.Destination, command.Command.Tag.Name)
 							if err != nil {
-								log.WithError(err).Error("unable to get current tag value: %v", command)
+								log.WithError(err).Errorf("unable to get current tag value: %v", command)
 								continue
 							}
 							command.Command.Tag.Value = "1"
