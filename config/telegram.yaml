@@ -1,5 +1,4 @@
 proxy:
-  address: proxy.aborilov.ru:7777
   username: sockduser
   password: aborilov
 tags:
