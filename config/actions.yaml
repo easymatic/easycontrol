@@ -1,0 +1,485 @@
+actions:
+  - name: AllOff
+    event:
+      source: clickhandler
+      tag:
+        name: Tamb3LongClick
+        value: 1
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+            value: 1
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: zal
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van4
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van2
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: spal
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: spal2
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyh
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+            value: 1
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyhup
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: ylic
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: gard
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kor
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+            value: 0
+
+
+  - name: Van4Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: Van1Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: van4
+
+  - name: Van2Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: Van2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: van2
+
+  - name: VanMainSwitchOff1
+    event:
+      source: buttonhandler
+      tag:
+        name: Van4Click
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: van4
+          value: 1
+      - source: plchandler
+        tag:
+          name: van2
+          value: 1
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van4
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van2
+            value: 0
+
+  - name: VanMainSwitchOff2
+    event:
+      source: buttonhandler
+      tag:
+        name: Van4Click
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: van4
+          value: 0
+      - source: plchandler
+        tag:
+          name: van2
+          value: 1
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van4
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van2
+            value: 0
+
+  - name: VanMainSwitchOff3
+    event:
+      source: buttonhandler
+      tag:
+        name: Van4Click
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: van4
+          value: 1
+      - source: plchandler
+        tag:
+          name: van2
+          value: 0
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van4
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van2
+            value: 0
+
+  - name: VanMainSwitchOn
+    event:
+      source: buttonhandler
+      tag:
+        name: Van4Click
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: van4
+          value: 0
+      - source: plchandler
+        tag:
+          name: van2
+          value: 0
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: van4
+            value: 1
+
+  - name: Tamb1Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: Tamb1Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: kor
+
+  - name: TambKorOnSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: KorClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: kor
+
+  - name: Spa2Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: Spa2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: spal
+
+  - name: Spa1Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: Spa1Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: spal2
+
+  - name: ZalSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: ZalClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: zal
+
+  - name: GardSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: GardClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: gard
+
+  - name: Tamb3Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: Tamb3Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: tamb
+
+  - name: Tamb2Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: Tamb2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: ylic
+
+  - name: KyhTableOn
+    event:
+      source: clickhandler
+      tag:
+        name: KyhLongClick
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: kyhup
+          value: 0
+      - source: plchandler
+        tag:
+          name: kyh
+          value: 0
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyh
+            value: 1
+
+  - name: KyhAllOn
+    event:
+      source: clickhandler
+      tag:
+        name: KyhLongClick
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: kyhup
+          value: 1
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyh
+            value: 1
+
+  - name: KyhOn
+    event:
+      source: buttonhandler
+      tag:
+        name: KyhClick
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: kyh
+          value: 0
+      - source: plchandler
+        tag:
+          name: kyhup
+          value: 0
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyhup
+            value: 1
+
+  - name: KyhOff1
+    event:
+      source: buttonhandler
+      tag:
+        name: KyhClick
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: kyh
+          value: 1
+      - source: plchandler
+        tag:
+          name: kyhup
+          value: 0
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyh
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyhup
+            value: 0
+
+  - name: KyhOff2
+    event:
+      source: buttonhandler
+      tag:
+        name: KyhClick
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: kyh
+          value: 0
+      - source: plchandler
+        tag:
+          name: kyhup
+          value: 1
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyh
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyhup
+            value: 0
+
+  - name: KyhOff3
+    event:
+      source: buttonhandler
+      tag:
+        name: KyhClick
+        value: 1
+    conditions:
+      - source: plchandler
+        tag:
+          name: kyh
+          value: 1
+      - source: plchandler
+        tag:
+          name: kyhup
+          value: 1
+    commands:
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyh
+            value: 0
+      - name: set
+        command:
+          destination: plchandler
+          tag:
+            name: kyhup
+            value: 0

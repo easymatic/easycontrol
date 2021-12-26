@@ -1,0 +1,60 @@
+device: "/dev/plc"
+output:
+  - name: zal
+    address: 1307
+  - name: van4
+    address: 1303
+  - name: van2
+    address: 1302
+  - name: spal
+    address: 1308
+  - name: spal2
+    address: 1311
+  - name: krovat
+    address: 1304
+  - name: kyh
+    address: 1298
+  - name: tamb
+    address: 1309
+  - name: ylic
+    address: 1310
+  - name: gard
+    address: 1299
+  - name: kor
+    address: 1305
+  - name: spalkrovatprav
+    address: 1300
+  - name: spalphil
+    address: 1306
+  - name: kyhvityagka
+    address: 1296
+  - name: vanrozetka
+    address: 1312
+  - name: kyhup
+    address: 1313
+input:
+memory:
+  - name: vkcSpa2
+    address: 3593
+  - name: vkcSpa1
+    address: 3592
+  - name: vkcZal
+    address: 3594
+  - name: vkcVan4
+    address: 3595
+  - name: vkcGard
+    address: 3596
+  - name: vkcKor
+    address: 3597
+  - name: vkcVan1
+    address: 3599
+  - name: vkcVan2
+    address: 3600
+  - name: vkcKyh
+    address: 3598
+  - name: vkcTamb3
+    address: 3603
+  - name: vkcTamb2
+    address: 3602
+  - name: vkcTamb1
+    address: 3601

@@ -1,0 +1,23 @@
+handlers:
+  - name: dummyhandler
+    run: no
+  - name: plchandler
+    run: no
+  - name: actionhandler
+    run: yes
+  - name: readerhandler
+    run: no
+  - name: loghandler
+    run: yes
+  - name: doorhandler
+    run: no
+  - name: accesshandler
+    run: no
+  - name: buttonhandler
+    run: yes
+  - name: clickhandler
+    run: yes
+  - name: telegramhandler
+    run: no
+  - name: webhandler
+    run: yes
