@@ -2,18 +2,17 @@ package telegramhandler
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"golang.org/x/net/proxy"
 
-	"gopkg.in/telegram-bot-api.v4"
+	// tgbotapi "gopkg.in/telegram-bot-api.v4"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
@@ -68,10 +67,13 @@ type TelegramHandler struct {
 	handler.BaseHandler
 	config *config
 	tags   map[string]context.CancelFunc
+	msgs   map[int64]int
+	bot    *tgbotapi.BotAPI
 }
 
 func NewTelegramHandler(core handler.CoreHandler) *TelegramHandler {
 	rv := &TelegramHandler{}
+	rv.msgs = map[int64]int{}
 	rv.Init()
 	rv.Name = "telegramhandler"
 	rv.CoreHandler = core
@@ -83,36 +85,62 @@ func (hndl *TelegramHandler) getInlineKeyboard() tgbotapi.InlineKeyboardMarkup {
 	for i, tag := range hndl.config.Tags {
 		t, err := hndl.CoreHandler.GetTag(tag.Source, tag.Tag.Name)
 		if err != nil {
-			log.WithError(err).Error("unable to get current tag value: %v", tag)
+			log.WithError(err).Errorf("unable to get current tag value: %v", tag)
 			continue
 		}
 		tags[i] = handler.Event{Source: tag.Source, Tag: handler.Tag{Name: t.Name, Value: t.Value}}
 	}
-	buttons := make([][]tgbotapi.InlineKeyboardButton, len(tags)+1)
-	for i, tag := range tags {
-		state := "on"
+	buttons := [][]tgbotapi.InlineKeyboardButton{}
+	row := []tgbotapi.InlineKeyboardButton{}
+	size := 2
+	for _, tag := range tags {
+		state := "⚪"
 		if tag.Tag.Value == "0" {
 			tag.Tag.Value = "1"
-			state = "off"
+			state = "⚫"
 		} else {
 			tag.Tag.Value = "0"
 		}
-		cmd := handler.Command{Destination: tag.Source, Tag: tag.Tag}
-		data, err := json.Marshal(cmd)
-		if err != nil {
-			log.WithError(err).Error("unable to marshal json: %v", cmd)
-			continue
-		}
+		cmd := fmt.Sprintf("%s:%s:%s", tag.Source, tag.Tag.Name, tag.Tag.Value)
 		status := fmt.Sprintf("%s: %s", tag.Tag.Name, state)
-		btn := tgbotapi.NewInlineKeyboardButtonData(status, string(data))
-		row := tgbotapi.NewInlineKeyboardRow(btn)
-		buttons[i] = row
+		btn := tgbotapi.NewInlineKeyboardButtonData(status, cmd)
+		row = append(row, btn)
+		if len(row) == size {
+			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(row...))
+			row = []tgbotapi.InlineKeyboardButton{}
+		}
 	}
-	btn := tgbotapi.NewInlineKeyboardButtonData("refresh", "refresh")
-	row := tgbotapi.NewInlineKeyboardRow(btn)
-	buttons[len(hndl.config.Tags)] = row
 	mrk := tgbotapi.NewInlineKeyboardMarkup(buttons...)
 	return mrk
+}
+
+func (hndl *TelegramHandler) handleEvents() error {
+	hndl.EventReader = hndl.CoreHandler.GetEventReader()
+
+	for {
+		select {
+		case e := <-hndl.EventReader.Ch:
+			if hndl.bot == nil {
+				continue
+			}
+			event := e.(handler.Event)
+			for _, tag := range hndl.config.Tags {
+				if event.Source == tag.Source && event.Tag.Name == tag.Tag.Name {
+					fmt.Println("here")
+					for chatID, msgID := range hndl.msgs {
+						mrk := hndl.getInlineKeyboard()
+						edit := tgbotapi.NewEditMessageReplyMarkup(chatID, msgID, mrk)
+						if _, err := hndl.bot.Send(edit); err != nil {
+							log.WithError(err).Error("unable to send keyboard update")
+						}
+					}
+				}
+			}
+		case <-hndl.Ctx.Done():
+			log.Info("Context canceled")
+			return hndl.Ctx.Err()
+		}
+	}
 }
 
 func (hndl *TelegramHandler) Start() error {
@@ -122,10 +150,9 @@ func (hndl *TelegramHandler) Start() error {
 	if err != nil {
 		return errors.Wrap(err, "unable to get config")
 	}
-	// hndl.EventReader = hndl.CoreHandler.GetEventReader()
+	go hndl.handleEvents()
 
-	var bot *tgbotapi.BotAPI
-	if hndl.config.Proxy != nil {
+	if hndl.config.Proxy != nil && hndl.config.Proxy.Address != "" {
 		dialer, err := proxy.SOCKS5("tcp", hndl.config.Proxy.Address, &proxy.Auth{User: hndl.config.Proxy.UserName, Password: hndl.config.Proxy.Password}, proxy.Direct)
 		if err != nil {
 			return errors.Wrap(err, "unable to connect to proxy")
@@ -134,24 +161,24 @@ func (hndl *TelegramHandler) Start() error {
 		httpTransport := &http.Transport{}
 		httpClient := &http.Client{Transport: httpTransport}
 		httpTransport.Dial = dialer.Dial
-		bot, err = tgbotapi.NewBotAPIWithClient(hndl.config.Token, httpClient)
+		hndl.bot, err = tgbotapi.NewBotAPIWithClient(hndl.config.Token, tgbotapi.APIEndpoint, httpClient)
 		if err != nil {
 			return errors.Wrap(err, "unable to connect to telegram api")
 		}
 	} else {
-		bot, err = tgbotapi.NewBotAPI(hndl.config.Token)
+		hndl.bot, err = tgbotapi.NewBotAPI(hndl.config.Token)
 		if err != nil {
 			return errors.Wrap(err, "unable to connect to telegram api")
 		}
 	}
-	bot.Debug = true
+	hndl.bot.Debug = true
 
-	log.Infof("new version Authorized on account %s", bot.Self.UserName)
+	log.Infof("new version Authorized on account %s", hndl.bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 5
 
-	updates, err := bot.GetUpdatesChan(u)
+	updates := hndl.bot.GetUpdatesChan(u)
 
 	for {
 		select {
@@ -159,52 +186,40 @@ func (hndl *TelegramHandler) Start() error {
 			go func() {
 				log.Infof("------------------start!!! processing-------------------------------")
 				if update.CallbackQuery != nil {
-					if update.CallbackQuery.Data == "refresh" {
-						log.Info("get new keyboard")
-						mrk := hndl.getInlineKeyboard()
-						log.Info("have new keyboard")
-						edit := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, mrk)
-						log.Info("have edit msg")
-						if _, err := bot.Send(edit); err != nil {
-							log.WithError(err).Error("unable to send refresh update")
-						}
-						log.Info("msg sent")
-						config := tgbotapi.CallbackConfig{}
-						config.CallbackQueryID = update.CallbackQuery.ID
-						config.Text = "Done"
-						if _, err := bot.AnswerCallbackQuery(config); err != nil {
-							log.WithError(err).Error("unable to send done")
-						}
-						log.Infof("------------------end processing-------------------------------")
-						return
-					}
 					if !checkAccess(update.CallbackQuery.From.UserName) {
 						config := tgbotapi.CallbackConfig{}
 						config.CallbackQueryID = update.CallbackQuery.ID
 						config.Text = "access denied"
-						if _, err := bot.AnswerCallbackQuery(config); err != nil {
-							log.WithError(err).Error("unable to send access denied")
-						}
+						// if _, err := hndl.bot.AnswerCallbackQuery(config); err != nil {
+						// log.WithError(err).Error("unable to send access denied")
+						// }
 						log.Infof("------------------end processing-------------------------------")
 						return
 					}
-					cmd := &handler.Command{}
-					if err := json.Unmarshal([]byte(update.CallbackQuery.Data), cmd); err != nil {
-						log.WithError(err).Error("unable unmarshal json: %s", update.CallbackQuery.Data)
+					ss := strings.Split(update.CallbackQuery.Data, ":")
+					cmd := &handler.Command{
+						Destination: ss[0],
+						Tag: handler.Tag{
+							Name:  ss[1],
+							Value: ss[2],
+						},
 					}
+					// if err := json.Unmarshal([]byte(update.CallbackQuery.Data), cmd); err != nil {
+					// log.WithError(err).Errorf("unable unmarshal json: %s", update.CallbackQuery.Data)
+					// }
 					hndl.CoreHandler.RunCommand(*cmd)
 					config := tgbotapi.CallbackConfig{}
 					config.CallbackQueryID = update.CallbackQuery.ID
 					config.Text = "Done"
-					time.Sleep(time.Duration(500) * time.Millisecond)
+					// time.Sleep(time.Duration(500) * time.Millisecond)
 					mrk := hndl.getInlineKeyboard()
 					edit := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, mrk)
-					if _, err := bot.Send(edit); err != nil {
+					if _, err := hndl.bot.Send(edit); err != nil {
 						log.WithError(err).Error("unable to send keyboard update")
 					}
-					if _, err := bot.AnswerCallbackQuery(config); err != nil {
-						log.WithError(err).Error("unable to send done")
-					}
+					// if _, err := hndl.bot.AnswerCallbackQuery(config); err != nil {
+					// log.WithError(err).Error("unable to send done")
+					// }
 					log.Infof("------------------end processing-------------------------------")
 					return
 				}
@@ -221,37 +236,38 @@ func (hndl *TelegramHandler) Start() error {
 						kb := tgbotapi.NewReplyKeyboard([]tgbotapi.KeyboardButton{btn})
 						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "starting...")
 						msg.ReplyMarkup = kb
-						if _, err := bot.Send(msg); err != nil {
+						if _, err := hndl.bot.Send(msg); err != nil {
 							log.WithError(err).Error("unable to send starting")
 						}
 					case "show":
 						msg := tgbotapi.NewMessage(update.Message.Chat.ID, "tags:")
 						mrk := hndl.getInlineKeyboard()
 						msg.ReplyMarkup = mrk
-						_, err := bot.Send(msg)
+						m, err := hndl.bot.Send(msg)
 						if err != nil {
 							log.WithError(err).Error("unable to send tags with keyboard")
 							log.Infof("------------------end processing-------------------------------")
 							return
 						}
+						hndl.msgs[update.Message.Chat.ID] = m.MessageID
 					case "settag":
 						if !checkAccess(update.Message.From.UserName) {
 							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "access denied")
-							bot.Send(msg)
+							hndl.bot.Send(msg)
 							log.Infof("------------------end processing-------------------------------")
 							return
 						}
 						args := update.Message.CommandArguments()
 						if args == "" {
 							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "use param - tagname=value")
-							bot.Send(msg)
+							hndl.bot.Send(msg)
 							log.Infof("------------------end processing-------------------------------")
 							return
 						}
 						argList := strings.Split(args, "=")
 						if len(argList) != 2 {
 							msg := tgbotapi.NewMessage(update.Message.Chat.ID, "use param - tagname=value")
-							bot.Send(msg)
+							hndl.bot.Send(msg)
 							log.Infof("------------------end processing-------------------------------")
 							return
 						}
