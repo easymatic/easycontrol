@@ -6,3 +6,4 @@ main
 # Telegram bot configs with sensitive tokens
 config/telegram*.yaml
 config/*telegram*.yaml
+config/telegram.yaml
