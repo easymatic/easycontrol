@@ -1,0 +1,32 @@
+# github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+## explicit
+github.com/go-telegram-bot-api/telegram-bot-api
+# github.com/goburrow/modbus v0.1.0
+## explicit
+github.com/goburrow/modbus
+# github.com/goburrow/serial v0.1.0
+## explicit
+github.com/goburrow/serial
+# github.com/pkg/errors v0.9.1
+## explicit
+github.com/pkg/errors
+# github.com/sirupsen/logrus v1.9.3
+## explicit; go 1.13
+github.com/sirupsen/logrus
+# github.com/technoweenie/multipartstreamer v1.0.1
+## explicit
+github.com/technoweenie/multipartstreamer
+# github.com/tjgq/broadcast v0.0.0-20140913210940-9d7fb01523c6
+## explicit
+github.com/tjgq/broadcast
+# golang.org/x/net v0.48.0
+## explicit; go 1.24.0
+golang.org/x/net/internal/socks
+golang.org/x/net/proxy
+# golang.org/x/sys v0.39.0
+## explicit; go 1.24.0
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+# gopkg.in/yaml.v2 v2.4.0
+## explicit; go 1.15
+gopkg.in/yaml.v2
