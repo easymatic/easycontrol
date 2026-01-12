@@ -1,60 +1,118 @@
-device: "/dev/plc"
+device: "/dev/ttyUSB0"
 output:
-  - name: zal
-    address: 1307
-  - name: van4
-    address: 1303
-  - name: van2
-    address: 1302
-  - name: spal
-    address: 1308
-  - name: spal2
-    address: 1311
-  - name: krovat
-    address: 1304
-  - name: kyh
-    address: 1298
-  - name: tamb
-    address: 1309
-  - name: ylic
-    address: 1310
-  - name: gard
-    address: 1299
-  - name: kor
-    address: 1305
-  - name: spalkrovatprav
-    address: 1300
-  - name: spalphil
-    address: 1306
-  - name: kyhvityagka
-    address: 1296
-  - name: vanrozetka
-    address: 1312
-  - name: kyhup
-    address: 1313
+  - name: Outdoor1
+    address: 1280	
+  - name: Outdoor2
+    address: 1281	
+  - name: Gates
+    address: 1282	
+    normalOpen: true
+  - name: Entrance
+    address: 1283	
+  - name: HallwayMirror
+    address: 1284	
+  - name: Hallway
+    address: 1285	
+  - name: ShowerRoom
+    address: 1296	
+  - name: ShowerRoomMirror
+    address: 1297	
+    normalOpen: true
+  - name: ShowerRoomFun
+    address: 1298	
+  - name: WC
+    address: 1299	
+  - name: WCFun
+    address: 1300	
+  - name: BedRoomCeiling
+    address: 1301	
+    normalOpen: true
+  - name: BedRoomBed
+    address: 1302	
+  - name: LivingRoom
+    address: 1303	
+  - name: LivingRoom2
+    address: 1304	
+  - name: BoilerRoom
+    address: 1305	
+  - name: Outdoor3
+    address: 1306	
+  - name: KitchenCeiling
+    address: 1307	
+  - name: KitchenTable
+    address: 1308	
+  - name: Stairs
+    address: 1309	
+  - name: BathRoom
+    address: 1310	
+  - name: BathRoomMirror
+    address: 1311	
+  - name: GuestCeiling
+    address: 1312	
+  - name: GuestTable
+    address: 1313	
+  - name: Kids2
+    address: 1314	
+  - name: Kids1
+    address: 1315	
+  - name: BathRoomFun
+    address: 1316	
+  - name: Cabinet
+    address: 1317	
+    normalOpen: true
+  - name: Balcony
+    address: 1318	
+  - name: facade
+    address: 1319	
 input:
 memory:
-  - name: vkcSpa2
-    address: 3593
-  - name: vkcSpa1
-    address: 3592
-  - name: vkcZal
-    address: 3594
-  - name: vkcVan4
-    address: 3595
-  - name: vkcGard
-    address: 3596
-  - name: vkcKor
-    address: 3597
-  - name: vkcVan1
-    address: 3599
-  - name: vkcVan2
-    address: 3600
-  - name: vkcKyh
-    address: 3598
-  - name: vkcTamb3
-    address: 3603
-  - name: vkcTamb2
-    address: 3602
-  - name: vkcTamb1
-    address: 3601
+  - name: vkcOutdoor1
+    address: 3585	
+  - name: vkcEntrance1
+    address: 3586	
+  - name: vkcOutdoor2
+    address: 3587	
+  - name: vkcHallway1
+    address: 3588	
+  - name: vkcEntrance2
+    address: 3589	
+  - name: vkcShowerRoom
+    address: 3590	
+  - name: vkcShowerRoomMirror
+    address: 3591	
+  - name: vkcWC
+    address: 3592	
+  - name: vkcBedRoomBed1
+    address: 3593	
+  - name: vkcBedRoomCeiling1
+    address: 3594	
+  - name: vkcBedRoomBed2
+    address: 3595	
+  - name: vkcBedRoomCeiling2
+    address: 3596	
+  - name: vkcHallway2
+    address: 3597	
+  - name: vkcLivingRoom1
+    address: 3598	
+  - name: vkcBoilerRoom
+    address: 3599	
+  - name: vkcStairs1
+    address: 3600	
+  - name: vkcStairs2
+    address: 3601	
+  - name: vkcLivingRoom2
+    address: 3602	
+  - name: vkcKitchen
+    address: 3603	
+  - name: vkcBathRoomMirror
+    address: 3604	
+  - name: vkcBathRoom
+    address: 3605	
+  - name: vkcGuestRoomCeiling
+    address: 3606	
+  - name: vkcGuestRoomTable
+    address: 3607	
+  - name: vkcKids1
+    address: 3608	
+  - name: vkcKids2
+    address: 3609	

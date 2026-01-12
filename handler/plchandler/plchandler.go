@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strconv"
 	"time"
@@ -36,6 +37,11 @@ const (
 	configPath   = "config/tags.yaml"
 
 	pollingTag = 2057
+
+	// Connection retry settings
+	maxRetries        = 10
+	initialRetryDelay = 1 * time.Second
+	maxRetryDelay     = 30 * time.Second
 )
 
 type memBlock struct {
@@ -125,6 +131,54 @@ func (ph *PLCHandler) GetTag(tag string) (*handler.Tag, error) {
 	return &handler.Tag{Name: t.Name, Value: t.Value}, nil
 }
 
+// connectWithRetry attempts to connect to the serial device with exponential backoff retry logic
+func (ph *PLCHandler) connectWithRetry(device string) error {
+	retryDelay := initialRetryDelay
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		// Check if device file exists before attempting connection
+		if _, err := os.Stat(device); os.IsNotExist(err) {
+			log.Warnf("Device %s does not exist yet (attempt %d/%d), waiting %v...", device, attempt, maxRetries, retryDelay)
+			select {
+			case <-ph.Ctx.Done():
+				return ph.Ctx.Err()
+			case <-time.After(retryDelay):
+				// Exponential backoff: double the delay, but cap at maxRetryDelay
+				retryDelay *= 2
+				if retryDelay > maxRetryDelay {
+					retryDelay = maxRetryDelay
+				}
+				continue
+			}
+		}
+
+		// Device exists, try to connect
+		log.Infof("Attempting to connect to PLC device %s (attempt %d/%d)...", device, attempt, maxRetries)
+		err := ph.clientHandler.Connect()
+		if err == nil {
+			log.Infof("Successfully connected to PLC device %s", device)
+			return nil
+		}
+
+		log.Warnf("Failed to connect to PLC device %s (attempt %d/%d): %v, retrying in %v...",
+			device, attempt, maxRetries, err, retryDelay)
+
+		// Wait before retry, but check for context cancellation
+		select {
+		case <-ph.Ctx.Done():
+			return ph.Ctx.Err()
+		case <-time.After(retryDelay):
+			// Exponential backoff: double the delay, but cap at maxRetryDelay
+			retryDelay *= 2
+			if retryDelay > maxRetryDelay {
+				retryDelay = maxRetryDelay
+			}
+		}
+	}
+
+	return errors.Errorf("failed to connect after %d attempts", maxRetries)
+}
+
 func (ph *PLCHandler) Start() error {
 	ph.BaseHandler.Start()
 
@@ -183,9 +237,11 @@ func (ph *PLCHandler) Start() error {
 	h.Timeout = 2 * time.Second
 
 	ph.clientHandler = h
-	err = ph.clientHandler.Connect()
+
+	// Retry connection with exponential backoff
+	err = ph.connectWithRetry(config.Device)
 	if err != nil {
-		return errors.Wrap(err, "unable to open serial device")
+		return errors.Wrap(err, "unable to connect to serial device after retries")
 	}
 	defer ph.clientHandler.Close()
 

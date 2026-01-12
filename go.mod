@@ -3,7 +3,7 @@ module github.com/easymatic/easycontrol
 go 1.25.3
 
 require (
-	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/goburrow/modbus v0.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
@@ -14,6 +14,5 @@ require (
 
 require (
 	github.com/goburrow/serial v0.1.0 // indirect
-	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 )

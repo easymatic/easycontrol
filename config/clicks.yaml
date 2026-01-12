@@ -1,16 +1,17 @@
 clicks:
-  - name: Tamb3LongClick
+  - name: BathLongClick
     event:
       source: buttonhandler
       tag:
-        name: Tamb3Click
+        name: vkcBathRoomClick
         value: 1
-    timeout: 1000
-
-  - name: KyhLongClick
-    event:
-      source: buttonhandler
-      tag:
-        name: KyhClick
-        value: 1
+    on_release: true
     timeout: 500
+  - name: BathShortClick
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcBathRoomClick
+        value: 1
+    timeout: 10
+    on_release: true

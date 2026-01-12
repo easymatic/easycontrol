@@ -1,39 +1,92 @@
-proxy:
-  address: proxy.aborilov.ru:7777
-  username: sockduser
-  password: aborilov
 token: 
 tags:
-  - source: plchandler
+  - source: dummyhandler
     tag:
-      name: kyh
-  - source: plchandler
+      name: BoilerRoom
+  - source: dummyhandler
     tag:
-      name: kyhup
-  - source: plchandler
+      name: BathRoom
+  - source: dummyhandler
     tag:
-      name: zal
-  - source: plchandler
+      name: BathRoomMirror
+  - source: dummyhandler
     tag:
-      name: van4
-  - source: plchandler
+      name: BathRoomFun
+  - source: dummyhandler
     tag:
-      name: van2
-  - source: plchandler
+      name: GuestCeiling
+  - source: dummyhandler
     tag:
-      name: spal
-  - source: plchandler
+      name: GuestTable
+  - source: dummyhandler
     tag:
-      name: spal2
-  - source: plchandler
+      name: Entrance
+  - source: dummyhandler
     tag:
-      name: tamb
-  - source: plchandler
+      name: HallwayMirror
+  - source: dummyhandler
     tag:
-      name: ylic
-  - source: plchandler
+      name: Hallway
+  - source: dummyhandler
     tag:
-      name: gard
-  - source: plchandler
+      name: BedRoomCeiling
+  - source: dummyhandler
     tag:
-      name: kor
+      name: BedRoomBed
+  - source: dummyhandler
+    tag:
+      name: Kids1
+  - source: dummyhandler
+    tag:
+      name: Kids2
+  - source: dummyhandler
+    tag:
+      name: Cabinet
+  - source: dummyhandler
+    tag:
+      name: KitchenCeiling
+  - source: dummyhandler
+    tag:
+      name: KitchenTable
+  - source: dummyhandler
+    tag:
+      name: LivingRoom
+  - source: dummyhandler
+    tag:
+      name: LivingRoom2
+  - source: dummyhandler
+    tag:
+      name: Outdoor1
+  - source: dummyhandler
+    tag:
+      name: Outdoor2
+  - source: dummyhandler
+    tag:
+      name: Outdoor3
+  - source: dummyhandler
+    tag:
+      name: facade
+  - source: dummyhandler
+    tag:
+      name: Balcony
+  - source: dummyhandler
+    tag:
+      name: Stairs
+  - source: dummyhandler
+    tag:
+      name: ShowerRoomMirror
+  - source: dummyhandler
+    tag:
+      name: Gates
+  - source: dummyhandler
+    tag:
+      name: ShowerRoom
+  - source: dummyhandler
+    tag:
+      name: ShowerRoomFun
+  - source: dummyhandler
+    tag:
+      name: WC
+  - source: dummyhandler
+    tag:
+      name: WCFun

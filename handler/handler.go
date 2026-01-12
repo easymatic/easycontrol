@@ -64,7 +64,9 @@ func (hndl *BaseHandler) GetName() string {
 
 func (hndl *BaseHandler) Stop() {
 	hndl.cancel()
-	hndl.EventReader.Close()
+	if hndl.EventReader != nil {
+		hndl.EventReader.Close()
+	}
 }
 
 func (hndl *BaseHandler) SetTag(tag Tag) {

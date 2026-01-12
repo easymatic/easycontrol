@@ -1,0 +1,8 @@
+build/easycontrol
+build/easycontrol-darwin-arm64
+build/easycontrol-linux-amd64
+main
+
+# Telegram bot configs with sensitive tokens
+config/telegram*.yaml
+config/*telegram*.yaml

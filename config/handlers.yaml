@@ -1,8 +1,8 @@
 handlers:
   - name: dummyhandler
-    run: no
-  - name: plchandler
     run: yes
+  - name: plchandler
+    run: no
   - name: actionhandler
     run: yes
   - name: readerhandler
@@ -18,4 +18,6 @@ handlers:
   - name: clickhandler
     run: yes
   - name: telegramhandler
+    run: yes
+  - name: webhandler
     run: yes

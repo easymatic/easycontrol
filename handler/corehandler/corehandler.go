@@ -49,6 +49,7 @@ type CoreHandler struct {
 	handlers    map[string]handler.Handler
 	eventReader *broadcast.Listener
 	config      Config
+	wg          sync.WaitGroup
 }
 
 func NewCoreHandler() *CoreHandler {
@@ -104,13 +105,14 @@ func (hndl *CoreHandler) Start() error {
 	hndl.commandChan = make(chan handler.Command, 100)
 	hndl.broadcaster = broadcast.New(10)
 	hndl.handlers = hndl.loadHandler()
-	var wg sync.WaitGroup
+
+	// Start all handlers in goroutines
 	for _, h := range hndl.config.Handlers {
 		if h.Run {
 			if hh, ok := hndl.handlers[h.Name]; ok {
-				wg.Add(1)
+				hndl.wg.Add(1)
 				go func(hh handler.Handler) {
-					defer wg.Done()
+					defer hndl.wg.Done()
 					if err := hh.Start(); err != nil {
 						log.WithError(err).Errorf("Error while running handler: %s", hh.GetName())
 					}
@@ -118,8 +120,24 @@ func (hndl *CoreHandler) Start() error {
 			}
 		}
 	}
-	wg.Wait()
+
+	// Don't wait here - handlers run indefinitely until context is cancelled
+	// Return immediately so the program can continue
 	return nil
+}
+
+// Stop gracefully shuts down all handlers
+func (hndl *CoreHandler) Stop() {
+	log.Info("Shutting down core handler...")
+	// Cancel the context to signal all handlers to stop
+	hndl.BaseHandler.Stop()
+	// Stop all handlers
+	for _, hh := range hndl.handlers {
+		hh.Stop()
+	}
+	// Wait for all handler goroutines to finish
+	hndl.wg.Wait()
+	log.Info("All handlers stopped")
 }
 
 func (hndl *CoreHandler) GetTag(source, tag string) (*handler.Tag, error) {

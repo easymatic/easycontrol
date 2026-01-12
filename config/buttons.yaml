@@ -1,61 +1,131 @@
 buttons:
-  - name: Spa2Click
+  - name: vkcOutdoor1Click
     event:
       source: plchandler
       tag:
-        name: vkcSpa2
-  - name: Spa1Click
+        name: vkcOutdoor1
+  - name: vkcOutdoor2Click
     event:
       source: plchandler
       tag:
-        name: vkcSpa1
-  - name: ZalClick
+        name: vkcOutdoor2
+  - name: vkcEntrance1Click
     event:
       source: plchandler
       tag:
-        name: vkcZal
-  - name: Van4Click
+        name: vkcEntrance1
+  - name: vkcEntrance2Click
     event:
       source: plchandler
       tag:
-        name: vkcVan4
-  - name: GardClick
+        name: vkcEntrance2
+  - name: vkcHallway1Click
     event:
       source: plchandler
       tag:
-        name: vkcGard
-  - name: KorClick
+        name: vkcHallway1
+  - name: vkcShowerRoomClick
     event:
       source: plchandler
       tag:
-        name: vkcKor
-  - name: Van1Click
+        name: vkcShowerRoom
+  - name: vkcShowerRoomMirrorClick
     event:
       source: plchandler
       tag:
-        name: vkcVan1
-  - name: Van2Click
+        name: vkcShowerRoomMirror
+  - name: vkcWCClick
     event:
       source: plchandler
       tag:
-        name: vkcVan2
-  - name: KyhClick
+        name: vkcWC
+  - name: vkcBedRoomBed1Click
     event:
       source: plchandler
       tag:
-        name: vkcKyh
-  - name: Tamb3Click
+        name: vkcBedRoomBed1
+  - name: vkcBedRoomCeiling1Click
     event:
       source: plchandler
       tag:
-        name: vkcTamb3
-  - name: Tamb2Click
+        name: vkcBedRoomCeiling1
+  - name: vkcBedRoomBed2Click
     event:
       source: plchandler
       tag:
-        name: vkcTamb2
-  - name: Tamb1Click
+        name: vkcBedRoomBed2
+  - name: vkcBedRoomCeiling2Click
     event:
       source: plchandler
       tag:
-        name: vkcTamb1
+        name: vkcBedRoomCeiling2
+  - name: vkcHallway2Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcHallway2
+  - name: vkcLivingRoom1Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcLivingRoom1
+  - name: vkcBoilerRoomClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcBoilerRoom
+  - name: vkcStairs1Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcStairs1
+  - name: vkcStairs2Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcStairs2
+  - name: vkcLivingRoom2Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcLivingRoom2
+  - name: vkcKitchenClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcKitchen
+  - name: vkcBathRoomClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcBathRoom
+  - name: vkcBathRoomMirrorClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcBathRoomMirror
+  - name: vkcGuestRoomCeilingClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcGuestRoomCeiling
+  - name: vkcGuestRoomTableClick
+    event:
+      source: plchandler
+      tag:
+        name: vkcGuestRoomTable
+  - name: vkcKids1Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcKids1
+  - name: vkcKids2Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcKids2
+  - name: vkcHallway1Click
+    event:
+      source: plchandler
+      tag:
+        name: vkcHallway1

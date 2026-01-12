@@ -1,485 +1,379 @@
 actions:
-  - name: AllOff
+  - name: AllSwitchON
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcEntrance1Click
+        value: 1
+    commands:
+      # - name: invert
+        # command:
+          # destination: plchandler
+          # tag:
+            # name: BoilerRoom
+            # value: 1
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: Entrance
+            value: 1
+      # - name: invert
+        # command:
+          # destination: plchandler
+          # tag:
+            # name: Hallway
+            # value: 1
+      # - name: invert
+        # command:
+          # destination: plchandler
+          # tag:
+            # name: WC
+            # value: 1
+      # - name: invert
+        # command:
+          # destination: plchandler
+          # tag:
+            # name: BedRoomCeiling
+            # value: 1
+      # - name: invert
+        # command:
+          # destination: plchandler
+          # tag:
+            # name: BedRoomBed
+            # value: 1
+      # - name: invert
+        # command:
+          # destination: plchandler
+          # tag:
+            # name: LivingRoom
+            # value: 1
+  - name: Kids1Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcKids1Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: Kids1
+            value: 1
+  - name: Kids2Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcKids2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: Kids2
+            value: 1
+  - name: GuestCeilingSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcGuestRoomCeilingClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: GuestCeiling
+            value: 1
+  - name: GuestTableSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcGuestRoomTableClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: GuestTable
+            value: 1
+  - name: BathRoomSwitch
     event:
       source: clickhandler
       tag:
-        name: Tamb3LongClick
+        name: BathShortClick
         value: 1
     commands:
-      - name: set
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: tamb
+            name: BathRoom
             value: 1
-      - name: set
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: zal
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: van4
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: van2
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: tamb
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: spal
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: spal2
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: kyh
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: tamb
+            name: BathRoomFun
             value: 1
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: kyhup
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: ylic
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: gard
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: kor
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: tamb
-            value: 0
-
-
-  - name: Van4Switch
+  - name: BathRoomMirrorSwitch
     event:
       source: buttonhandler
       tag:
-        name: Van1Click
+        name: vkcBathRoomMirrorClick
         value: 1
     commands:
       - name: invert
         command:
           destination: plchandler
           tag:
-            name: van4
-
-  - name: Van2Switch
-    event:
-      source: buttonhandler
-      tag:
-        name: Van2Click
-        value: 1
-    commands:
-      - name: invert
-        command:
-          destination: plchandler
-          tag:
-            name: van2
-
-  - name: VanMainSwitchOff1
-    event:
-      source: buttonhandler
-      tag:
-        name: Van4Click
-        value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: van4
-          value: 1
-      - source: plchandler
-        tag:
-          name: van2
-          value: 1
-    commands:
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: van4
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: van2
-            value: 0
-
-  - name: VanMainSwitchOff2
-    event:
-      source: buttonhandler
-      tag:
-        name: Van4Click
-        value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: van4
-          value: 0
-      - source: plchandler
-        tag:
-          name: van2
-          value: 1
-    commands:
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: van4
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: van2
-            value: 0
-
-  - name: VanMainSwitchOff3
-    event:
-      source: buttonhandler
-      tag:
-        name: Van4Click
-        value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: van4
-          value: 1
-      - source: plchandler
-        tag:
-          name: van2
-          value: 0
-    commands:
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: van4
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: van2
-            value: 0
-
-  - name: VanMainSwitchOn
-    event:
-      source: buttonhandler
-      tag:
-        name: Van4Click
-        value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: van4
-          value: 0
-      - source: plchandler
-        tag:
-          name: van2
-          value: 0
-    commands:
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: van4
+            name: BathRoomMirror
             value: 1
-
-  - name: Tamb1Switch
+  # - name: BathRoomFunSwitch
+    # event:
+      # source: clickhandler
+      # tag:
+        # name: BathLongClick
+        # value: 1
+    # commands:
+      # - name: invert
+        # command:
+          # destination: plchandler
+          # tag:
+            # name: BathRoomFun
+            # value: 1
+  - name: KitchenSwitch
     event:
       source: buttonhandler
       tag:
-        name: Tamb1Click
+        name: vkcKitchenClick
         value: 1
     commands:
       - name: invert
         command:
           destination: plchandler
           tag:
-            name: kor
-
-  - name: TambKorOnSwitch
-    event:
-      source: buttonhandler
-      tag:
-        name: KorClick
-        value: 1
-    commands:
-      - name: invert
-        command:
-          destination: plchandler
-          tag:
-            name: kor
-
-  - name: Spa2Switch
-    event:
-      source: buttonhandler
-      tag:
-        name: Spa2Click
-        value: 1
-    commands:
-      - name: invert
-        command:
-          destination: plchandler
-          tag:
-            name: spal
-
-  - name: Spa1Switch
-    event:
-      source: buttonhandler
-      tag:
-        name: Spa1Click
-        value: 1
-    commands:
-      - name: invert
-        command:
-          destination: plchandler
-          tag:
-            name: spal2
-
-  - name: ZalSwitch
-    event:
-      source: buttonhandler
-      tag:
-        name: ZalClick
-        value: 1
-    commands:
-      - name: invert
-        command:
-          destination: plchandler
-          tag:
-            name: zal
-
-  - name: GardSwitch
-    event:
-      source: buttonhandler
-      tag:
-        name: GardClick
-        value: 1
-    commands:
-      - name: invert
-        command:
-          destination: plchandler
-          tag:
-            name: gard
-
-  - name: Tamb3Switch
-    event:
-      source: buttonhandler
-      tag:
-        name: Tamb3Click
-        value: 1
-    commands:
-      - name: invert
-        command:
-          destination: plchandler
-          tag:
-            name: tamb
-
-  - name: Tamb2Switch
-    event:
-      source: buttonhandler
-      tag:
-        name: Tamb2Click
-        value: 1
-    commands:
-      - name: invert
-        command:
-          destination: plchandler
-          tag:
-            name: ylic
-
-  - name: KyhTableOn
-    event:
-      source: clickhandler
-      tag:
-        name: KyhLongClick
-        value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: kyhup
-          value: 0
-      - source: plchandler
-        tag:
-          name: kyh
-          value: 0
-    commands:
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: kyh
+            name: KitchenTable
             value: 1
-
-  - name: KyhAllOn
+  - name: LivingRoom1Switch
     event:
-      source: clickhandler
+      source: buttonhandler
       tag:
-        name: KyhLongClick
+        name: vkcLivingRoom1Click
         value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: kyhup
-          value: 1
     commands:
-      - name: set
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: kyh
+            name: LivingRoom
             value: 1
-
-  - name: KyhOn
+  - name: Hallway1Switch
     event:
       source: buttonhandler
       tag:
-        name: KyhClick
+        name: vkcHallway2Click
         value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: kyh
-          value: 0
-      - source: plchandler
-        tag:
-          name: kyhup
-          value: 0
     commands:
-      - name: set
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: kyhup
+            name: Hallway
             value: 1
-
-  - name: KyhOff1
+  - name: Hallway2RoomSwitch
     event:
       source: buttonhandler
       tag:
-        name: KyhClick
+        name: vkcLivingRoom2Click
         value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: kyh
-          value: 1
-      - source: plchandler
-        tag:
-          name: kyhup
-          value: 0
     commands:
-      - name: set
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: kyh
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: kyhup
-            value: 0
-
-  - name: KyhOff2
+            name: KitchenCeiling
+            value: 1
+      # - name: invert
+        # command:
+          # destination: plchandler
+          # tag:
+            # name: Hallway
+            # value: 1
+  - name: Stairs1Switch
     event:
       source: buttonhandler
       tag:
-        name: KyhClick
+        name: vkcStairs1Click
         value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: kyh
-          value: 0
-      - source: plchandler
-        tag:
-          name: kyhup
-          value: 1
     commands:
-      - name: set
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: kyh
-            value: 0
-      - name: set
-        command:
-          destination: plchandler
-          tag:
-            name: kyhup
-            value: 0
-
-  - name: KyhOff3
+            name: Stairs
+            value: 1
+  - name: Stairs2RoomSwitch
     event:
       source: buttonhandler
       tag:
-        name: KyhClick
+        name: vkcStairs2Click
         value: 1
-    conditions:
-      - source: plchandler
-        tag:
-          name: kyh
-          value: 1
-      - source: plchandler
-        tag:
-          name: kyhup
-          value: 1
     commands:
-      - name: set
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: kyh
-            value: 0
-      - name: set
+            name: Stairs
+            value: 1
+  - name: WCSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcWCClick
+        value: 1
+    commands:
+      - name: invert
         command:
           destination: plchandler
           tag:
-            name: kyhup
-            value: 0
+            name: WC
+            value: 1
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: WCFun
+            value: 1
+  - name: ShowerRoomSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcShowerRoomClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: ShowerRoom
+            value: 1
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: ShowerRoomFun
+            value: 1
+  - name: ShowerBoilerSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcBoilerRoomClick
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: BoilerRoom
+            value: 1
+  - name: BedroomCeilingSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcBedRoomCeiling2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: BedRoomCeiling
+            value: 1
+  - name: BedroomBedSwitch2
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcBedRoomBed2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: BedRoomBed
+            value: 1
+  - name: Entrance2Switch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcEntrance2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: Entrance
+            value: 1
+  - name: HallwaySwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcHallway1Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: Hallway
+            value: 1
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: HallwayMirror
+            value: 1
+  - name: OutdoorSwitchOn
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcOutdoor1Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: Outdoor1
+            value: 1
+  - name: OutdoorSwitchOff
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcOutdoor1Click
+        value: 0
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: Outdoor1
+            value: 1
+  - name: OutdoorSwitch
+    event:
+      source: buttonhandler
+      tag:
+        name: vkcOutdoor2Click
+        value: 1
+    commands:
+      - name: invert
+        command:
+          destination: plchandler
+          tag:
+            name: Outdoor1
+            value: 1
