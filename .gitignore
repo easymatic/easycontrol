@@ -7,3 +7,4 @@ main
 config/telegram*.yaml
 config/*telegram*.yaml
 config/telegram.yaml
+config/telegram.yaml
